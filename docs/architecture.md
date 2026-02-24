@@ -14,3 +14,7 @@
 <!-- Section 2026-02-24T14:35:40 +0500 -->
 ### Security & Route Guards
 - Middleware configuration for protecting admin routes and refreshing access tokens.
+
+<!-- Section 2026-02-24T18:50:15 +0500 -->
+### Form Validation
+- Standardized client-side form validation rules with friendly error messages.
