@@ -10,3 +10,7 @@
 <!-- Section 2026-02-10T11:15:22 +0500 -->
 ### Admissions Workflow
 - User journey for prospective students, document uploads, and validation steps.
+
+<!-- Section 2026-02-24T14:35:40 +0500 -->
+### Security & Route Guards
+- Middleware configuration for protecting admin routes and refreshing access tokens.
