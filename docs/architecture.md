@@ -18,3 +18,7 @@
 <!-- Section 2026-02-24T18:50:15 +0500 -->
 ### Form Validation
 - Standardized client-side form validation rules with friendly error messages.
+
+<!-- Section 2026-02-26T16:10:45 +0500 -->
+### Internationalization (i18n)
+- Locale routing guidelines and translation key dictionary structure.
