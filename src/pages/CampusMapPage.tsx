@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Campus3DScene } from "@/components/campus-map/Campus3DScene";
 import { BuildingDetailCard } from "@/components/campus-map/BuildingDetailCard";
 import { MapHeader } from "@/components/campus-map/MapHeader";
@@ -21,10 +21,14 @@ const CampusMapPage: React.FC = () => {
 
   const handleLoadingProgress = useCallback((percent: number) => {
     setLoadProgress(percent);
-    if (percent >= 100) {
-      setTimeout(() => setIsLoading(false), 300);
-    }
   }, []);
+
+  useEffect(() => {
+    if (loadProgress >= 100) {
+      const timer = setTimeout(() => setIsLoading(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [loadProgress]);
 
   const handleBuildingSelect = useCallback((key: BuildingKey | null) => {
     setSelectedBuildingKey(key);
@@ -42,6 +46,47 @@ const CampusMapPage: React.FC = () => {
   const handleFocusBuilding = useCallback(() => {
     setFocusSignal((prev) => prev + 1);
   }, []);
+
+  const buildingKeys = Object.keys(BUILDINGS_DATA) as BuildingKey[];
+
+  const handleSelectPrev = useCallback(() => {
+    setSelectedBuildingKey((current) => {
+      if (!current) return buildingKeys[buildingKeys.length - 1];
+      const idx = buildingKeys.indexOf(current);
+      return idx > 0 ? buildingKeys[idx - 1] : buildingKeys[buildingKeys.length - 1];
+    });
+  }, [buildingKeys]);
+
+  const handleSelectNext = useCallback(() => {
+    setSelectedBuildingKey((current) => {
+      if (!current) return buildingKeys[0];
+      const idx = buildingKeys.indexOf(current);
+      return idx < buildingKeys.length - 1 ? buildingKeys[idx + 1] : buildingKeys[0];
+    });
+  }, [buildingKeys]);
+
+  // Global keyboard shortcuts for instant campus exploration
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleSelectPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleSelectNext();
+      } else if (e.key === "r" || e.key === "R") {
+        handleResetCamera();
+      } else if (e.key === "f" || e.key === "F") {
+        handleFocusBuilding();
+      } else if (e.key === "Escape") {
+        handleCloseDetail();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSelectPrev, handleSelectNext, handleResetCamera, handleFocusBuilding, handleCloseDetail]);
 
   const activeBuilding = selectedBuildingKey ? BUILDINGS_DATA[selectedBuildingKey] : null;
 
@@ -66,7 +111,7 @@ const CampusMapPage: React.FC = () => {
 
       {/* UI Overlay Container */}
       <div className="pointer-events-none absolute inset-0 z-30 flex flex-col justify-between p-2 pt-[max(env(safe-area-inset-top),0.75rem)] sm:p-6 overflow-hidden">
-        {/* Top Header Floating Pill */}
+        {/* Top Header Floating Capsules */}
         <MapHeader
           language={language}
           onResetCamera={handleResetCamera}
@@ -78,6 +123,10 @@ const CampusMapPage: React.FC = () => {
           language={language}
           onClose={handleCloseDetail}
           onFocus={handleFocusBuilding}
+          onSelectPrev={handleSelectPrev}
+          onSelectNext={handleSelectNext}
+          currentIndex={selectedBuildingKey ? buildingKeys.indexOf(selectedBuildingKey) + 1 : undefined}
+          totalBuildings={buildingKeys.length}
         />
 
         {/* Bottom Building Selector Dock */}
@@ -86,6 +135,7 @@ const CampusMapPage: React.FC = () => {
           selectedBuildingKey={selectedBuildingKey}
           onSelectBuilding={handleBuildingSelect}
           onFocusBuilding={handleFocusBuilding}
+          isDetailOpenOnMobile={Boolean(selectedBuildingKey)}
         />
       </div>
     </div>

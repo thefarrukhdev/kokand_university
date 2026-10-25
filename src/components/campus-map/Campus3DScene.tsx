@@ -34,6 +34,40 @@ const findBuildingKeyFromObject = (object: THREE.Object3D): BuildingKey | null =
   return null;
 };
 
+/**
+ * Generates sky gradient canvas for light or dark mode
+ */
+const drawSkyGradient = (canvas: HTMLCanvasElement, isDark: boolean) => {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+  if (isDark) {
+    gradient.addColorStop(0, "#030712");
+    gradient.addColorStop(0.35, "#0b1329");
+    gradient.addColorStop(0.7, "#0f172a");
+    gradient.addColorStop(1, "#1e293b");
+  } else {
+    gradient.addColorStop(0, "#4a6fa5");
+    gradient.addColorStop(0.4, "#8fa8d6");
+    gradient.addColorStop(0.7, "#cbd7eb");
+    gradient.addColorStop(1, "#ffffff");
+  }
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 2, 512);
+};
+
+/**
+ * Calculates adaptive camera vertical FOV based on screen aspect ratio
+ * On desktop (aspect >= 1): standard 45 degrees
+ * On mobile portrait (aspect < 1): widens FOV to comfortably encompass campus without horizontal clipping
+ */
+const getResponsiveFOV = (aspect: number): number => {
+  if (aspect < 1) {
+    return Math.min(65, 45 + (1 - aspect) * 32);
+  }
+  return 45;
+};
+
 export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   onBuildingSelect,
   selectedBuildingKey,
@@ -50,6 +84,8 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const hemiLightRef = useRef<THREE.HemisphereLight | null>(null);
+  const skyCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const skyTextureRef = useRef<THREE.CanvasTexture | null>(null);
 
   // Building geometry and bounding references
   const buildingPositionsRef = useRef<Map<BuildingKey, THREE.Vector3>>(new Map());
@@ -98,10 +134,16 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
         mat.forEach((m) => {
           if ("emissive" in m && m.emissive instanceof THREE.Color) {
             m.emissive.setHex(0x000000);
+            if ("emissiveIntensity" in m) {
+              (m as THREE.MeshStandardMaterial).emissiveIntensity = 0;
+            }
           }
         });
       } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
         mat.emissive.setHex(0x000000);
+        if ("emissiveIntensity" in mat) {
+          (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0;
+        }
       }
     });
     highlightedMeshesRef.current = [];
@@ -115,10 +157,16 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
           mat.forEach((m) => {
             if ("emissive" in m && m.emissive instanceof THREE.Color) {
               m.emissive.setHex(0x9c1447);
+              if ("emissiveIntensity" in m) {
+                (m as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
+              }
             }
           });
         } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
           mat.emissive.setHex(0x9c1447);
+          if ("emissiveIntensity" in mat) {
+            (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
+          }
         }
       });
       highlightedMeshesRef.current = activeMeshes;
@@ -131,13 +179,19 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const buildingInfo = BUILDINGS_DATA[selectedBuildingKey];
 
     if (buildingPos && buildingInfo) {
-      targetLookAtRef.current.copy(buildingPos);
+      const isMobile = window.innerWidth < 640;
+      targetLookAtRef.current.set(
+        buildingPos.x,
+        buildingPos.y - (isMobile ? 1.2 : 0),
+        buildingPos.z
+      );
 
       const offset = buildingInfo.cameraOffset || { x: 15, y: 13, z: 15 };
+      const distMult = isMobile ? 1.15 : 1.0;
       targetCameraPosRef.current.set(
-        buildingPos.x + offset.x,
-        buildingPos.y + offset.y,
-        buildingPos.z + offset.z
+        buildingPos.x + offset.x * distMult,
+        buildingPos.y + offset.y * distMult,
+        buildingPos.z + offset.z * distMult
       );
       isAnimatingRef.current = true;
     }
@@ -180,6 +234,11 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       hemiLightRef.current.groundColor.setHex(isDark ? 0x1e293b : 0x4a3f35);
       hemiLightRef.current.intensity = isDark ? 0.55 : 0.75;
     }
+
+    if (skyCanvasRef.current && skyTextureRef.current) {
+      drawSkyGradient(skyCanvasRef.current, isDark);
+      skyTextureRef.current.needsUpdate = true;
+    }
   }, [theme]);
 
   // Main WebGL Scene Initialization - Runs strictly once on mount
@@ -199,7 +258,8 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const height = container.clientHeight || window.innerHeight;
 
     // 2. Camera Setup
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    const aspect = width / height;
+    const camera = new THREE.PerspectiveCamera(getResponsiveFOV(aspect), aspect, 0.1, 1000);
     camera.position.set(
       CAMERA_PRESETS.initialPosition.x,
       CAMERA_PRESETS.initialPosition.y,
@@ -227,18 +287,11 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const skyCanvas = document.createElement("canvas");
     skyCanvas.width = 2;
     skyCanvas.height = 512;
-    const ctx = skyCanvas.getContext("2d");
-    if (ctx) {
-      const gradient = ctx.createLinearGradient(0, 0, 0, 512);
-      gradient.addColorStop(0, "#4a6fa5");
-      gradient.addColorStop(0.4, "#8fa8d6");
-      gradient.addColorStop(0.7, "#cbd7eb");
-      gradient.addColorStop(1, "#ffffff");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 2, 512);
-    }
+    skyCanvasRef.current = skyCanvas;
+    drawSkyGradient(skyCanvas, initialIsDark);
     const skyTexture = new THREE.CanvasTexture(skyCanvas);
     skyTexture.colorSpace = THREE.SRGBColorSpace;
+    skyTextureRef.current = skyTexture;
     const skyGeo = new THREE.SphereGeometry(250, 32, 15);
     const skyMat = new THREE.MeshBasicMaterial({
       map: skyTexture,
@@ -313,6 +366,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       metalness: 0.2,
     });
     const beaconCone = new THREE.Mesh(coneGeo, coneMat);
+    beaconCone.raycast = () => {};
     beaconGroup.add(beaconCone);
 
     // Subtle orbiting halo ring
@@ -326,6 +380,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     });
     const beaconHalo = new THREE.Mesh(ringGeo, ringMat);
     beaconHalo.position.y = 0.4;
+    beaconHalo.raycast = () => {};
     beaconGroup.add(beaconHalo);
 
     // 8. GLTF Campus Model Loading & High-Fidelity Bounding Box Center Calculation
@@ -365,6 +420,12 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
 
             const matchedKey = findBuildingKeyFromObject(mesh);
             if (matchedKey) {
+              // Clone materials for building meshes to prevent emissive highlights leaking to shared meshes
+              if (mesh.material) {
+                mesh.material = Array.isArray(mesh.material)
+                  ? mesh.material.map((m) => m.clone())
+                  : mesh.material.clone();
+              }
               if (!buildingMeshesRef.current.has(matchedKey)) {
                 buildingMeshesRef.current.set(matchedKey, []);
               }
@@ -398,7 +459,8 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
           const pos = buildingPositionsRef.current.get(currentActiveKey)!;
           const info = BUILDINGS_DATA[currentActiveKey];
           if (info) {
-            targetLookAtRef.current.copy(pos);
+            const isMobile = window.innerWidth < 640;
+            targetLookAtRef.current.set(pos.x, pos.y - (isMobile ? 1.0 : 0), pos.z);
             const offset = info.cameraOffset || { x: 15, y: 13, z: 15 };
             targetCameraPosRef.current.set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
             isAnimatingRef.current = true;
@@ -495,7 +557,9 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       if (!container) return;
       const w = container.clientWidth || window.innerWidth;
       const h = container.clientHeight || window.innerHeight;
-      camera.aspect = w / h;
+      const asp = w / h;
+      camera.aspect = asp;
+      camera.fov = getResponsiveFOV(asp);
       camera.updateProjectionMatrix();
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(w, h);
@@ -627,7 +691,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing select-none"
+      className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing select-none touch-none"
     />
   );
 };

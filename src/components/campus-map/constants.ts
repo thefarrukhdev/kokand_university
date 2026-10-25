@@ -25,7 +25,7 @@ export const CATEGORY_META: Record<BuildingCategory, CategoryMeta> = {
       en: "Administration",
     },
     icon: Building2,
-    badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
   },
   education: {
     label: {
@@ -43,7 +43,7 @@ export const CATEGORY_META: Record<BuildingCategory, CategoryMeta> = {
       en: "Sports & Athletics",
     },
     icon: Trophy,
-    badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
   },
   dining: {
     label: {
@@ -52,7 +52,7 @@ export const CATEGORY_META: Record<BuildingCategory, CategoryMeta> = {
       en: "Dining & Cafe",
     },
     icon: Coffee,
-    badgeClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
   },
   dormitory: {
     label: {
@@ -61,16 +61,16 @@ export const CATEGORY_META: Record<BuildingCategory, CategoryMeta> = {
       en: "Residence Hall",
     },
     icon: Home,
-    badgeClass: "bg-secondary/10 text-secondary dark:text-blue-400 border-secondary/20",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
   },
   technology: {
     label: {
-      uz: "IT va Texnologiya",
-      ru: "IT и Технологии",
-      en: "IT & Technology",
+      uz: "Axborot texnologiyalari",
+      ru: "Информационные технологии",
+      en: "Information Technology",
     },
     icon: Cpu,
-    badgeClass: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
   },
 };
 
@@ -85,6 +85,59 @@ export const BUILDING_CATEGORY_MAP: Record<BuildingKey, BuildingCategory> = {
   dormitory_1: "dormitory",
   dormitory_2: "dormitory",
   it_academy: "technology",
+};
+
+export const BUILDING_SHORT_TITLES: Record<BuildingKey, Record<Language, string>> = {
+  akm: {
+    uz: "AKM",
+    ru: "ИБЦ",
+    en: "ILC",
+  },
+  building_a: {
+    uz: "A-bino",
+    ru: "Корпус А",
+    en: "Building A",
+  },
+  building_b: {
+    uz: "B-bino",
+    ru: "Корпус B",
+    en: "Building B",
+  },
+  building_c: {
+    uz: "C-bino",
+    ru: "Корпус C",
+    en: "Building C",
+  },
+  building_d: {
+    uz: "D-bino",
+    ru: "Корпус D",
+    en: "Building D",
+  },
+  gym: {
+    uz: "Sport zali",
+    ru: "Спортзал",
+    en: "Gym",
+  },
+  dining_room: {
+    uz: "Oshxona",
+    ru: "Столовая",
+    en: "Canteen",
+  },
+  dormitory_1: {
+    uz: "Yotoqxona ♀",
+    ru: "Общежитие ♀",
+    en: "Dorm ♀",
+  },
+  dormitory_2: {
+    uz: "Yotoqxona ♂",
+    ru: "Общежитие ♂",
+    en: "Dorm ♂",
+  },
+  it_academy: {
+    uz: "IT Akademiya",
+    ru: "IT Академия",
+    en: "IT Academy",
+  },
 };
 
 export const getBuildingIcon = (key: BuildingKey): React.ComponentType<{ className?: string }> => {
@@ -147,6 +200,31 @@ export const MAP_I18N = {
     uz: "Qo'qon Universiteti interaktiv 3D modeli tayyorlanmoqda...",
     ru: "Подготовка интерактивной 3D модели университета...",
     en: "Initializing university interactive 3D model...",
+  },
+  moreDetails: {
+    uz: "Batafsil",
+    ru: "Подробнее",
+    en: "Details",
+  },
+  lessDetails: {
+    uz: "Kamroq",
+    ru: "Свернуть",
+    en: "Less",
+  },
+  prevBuilding: {
+    uz: "Oldingi bino",
+    ru: "Предыдущее здание",
+    en: "Previous Building",
+  },
+  nextBuilding: {
+    uz: "Keyingi bino",
+    ru: "Следующее здание",
+    en: "Next Building",
+  },
+  close: {
+    uz: "Yopish",
+    ru: "Закрыть",
+    en: "Close",
   },
   instructions: {
     mouseRotate: {
