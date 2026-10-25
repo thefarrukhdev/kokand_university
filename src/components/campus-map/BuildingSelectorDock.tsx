@@ -34,12 +34,20 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
     }
   }, [selectedBuildingKey]);
 
+  // Smooth wheel horizontal scrolling on desktop
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (containerRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      containerRef.current.scrollLeft += e.deltaY * 0.8;
+    }
+  };
+
   return (
     <footer className="pointer-events-auto w-full max-w-4xl mx-auto px-2 sm:px-0">
       <div className="glass-card rounded-2xl border border-border/60 bg-card/85 p-1.5 sm:p-2 shadow-2xl backdrop-blur-xl">
         <div
           ref={containerRef}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5 scroll-smooth"
+          onWheel={handleWheel}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5 scroll-smooth [mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)]"
         >
           {buildingKeys.map((key) => {
             const building = BUILDINGS_DATA[key];
