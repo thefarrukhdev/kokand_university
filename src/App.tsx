@@ -5,8 +5,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+
+const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 import MeshGradient from "./components/MeshGradient";
 import ClickSpark from "./components/ui/ClickSpark";
 import SideRays from "./components/ui/SideRays";
@@ -50,6 +53,20 @@ const AppContent = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route
+                  path="/campus-map"
+                  element={
+                    <Suspense
+                      fallback={
+                        <div className="flex items-center justify-center min-h-screen bg-slate-950 text-white">
+                          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                      }
+                    >
+                      <CampusMapPage />
+                    </Suspense>
+                  }
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

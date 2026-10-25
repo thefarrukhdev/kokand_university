@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ExternalLink, Compass } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import MagneticButton from "@/components/ui/MagneticButton";
@@ -57,16 +58,26 @@ const Hero = () => {
               <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
                 {t.hero.welcomeCard.description}
               </p>
-              <MagneticButton
-                as="a"
-                href="https://www.kokanduni.uz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold shadow-md hover:bg-primary/90 transition-colors"
-              >
-                {t.hero.welcomeCard.cta}
-                <ExternalLink className="h-5 w-5 pointer-events-none" />
-              </MagneticButton>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <MagneticButton
+                  as="a"
+                  href="https://www.kokanduni.uz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold shadow-md hover:bg-primary/90 transition-colors"
+                >
+                  {t.hero.welcomeCard.cta}
+                  <ExternalLink className="h-5 w-5 pointer-events-none" />
+                </MagneticButton>
+
+                <Link
+                  to="/campus-map"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-background/80 hover:bg-background text-foreground border border-border/80 hover:border-primary/50 shadow-md backdrop-blur-md transition-all group"
+                >
+                  <Compass className="h-5 w-5 text-primary group-hover:rotate-45 transition-transform duration-300" />
+                  <span>3D Kampus</span>
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

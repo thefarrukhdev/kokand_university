@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -116,7 +117,16 @@ const Navbar = () => {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2 sm:gap-4 z-50 relative">
+          <div className="flex items-center gap-2 sm:gap-3 z-50 relative">
+            <Link
+              to="/campus-map"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all duration-300 shadow-sm"
+              title="Qo'qon Universiteti 3D Kampusi"
+            >
+              <Compass className="h-3.5 w-3.5 animate-spin-slow" />
+              <span>3D Kampus</span>
+            </Link>
+
             <ThemeToggle />
             
             {/* Mobile menu button */}
@@ -149,6 +159,17 @@ const Navbar = () => {
                     {link.name}
                   </button>
                 ))}
+
+                <Link
+                  to="/campus-map"
+                  className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary rounded-2xl shadow-md transition-all"
+                >
+                  <span className="flex items-center gap-2">
+                    <Compass className="h-4 w-4" />
+                    <span>3D Kampus Xaritasi</span>
+                  </span>
+                  <span className="text-xs opacity-80">3D Tur →</span>
+                </Link>
               </div>
             </motion.div>
           )}
