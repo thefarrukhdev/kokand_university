@@ -48,7 +48,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
   return (
     <header className="w-full flex justify-center">
       {/* Unified Floating Pill matching Kokand University signature Navbar */}
-      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full glass-card py-2 px-3 sm:px-6 shadow-xl border border-border/60 bg-card/85 backdrop-blur-xl transition-all">
+      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full bg-card text-card-foreground py-2.5 px-3 sm:px-6 shadow-xl border border-border/80 transition-all">
         {/* Left Side: Back Link & University Identity */}
         <div className="flex items-center gap-2 sm:gap-3">
           <Link

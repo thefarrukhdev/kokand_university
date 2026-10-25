@@ -55,10 +55,10 @@ const Navbar = () => {
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className={`pointer-events-auto w-full max-w-5xl transition-all duration-300 ${
           isOpen ? "rounded-3xl" : "rounded-full"
-        } ${
+        } bg-card text-card-foreground border border-border py-2.5 px-4 sm:px-6 ${
           isScrolled || isOpen
-            ? "glass-card shadow-lg bg-background/70 backdrop-blur-xl border border-border/50 py-2 px-4 sm:px-6" 
-            : "bg-transparent border-transparent py-3 px-4 sm:px-6"
+            ? "shadow-2xl border-border/90"
+            : "shadow-lg border-border/60"
         }`}
       >
         <div className="flex items-center justify-between">
