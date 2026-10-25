@@ -64,11 +64,12 @@ const VacancyModal = ({ vacancy, onClose }: VacancyModalProps) => {
       
       toast({ title: "✅ " + (t.vacancy?.success || "Muvaffaqiyatli yuborildi") });
       setTimeout(onClose, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("💥 Xatolik:", err);
+      const message = err instanceof Error ? err.message : "Internet yoki server bilan muammo bo‘lishi mumkin.";
       toast({
         title: "❌ " + (t.vacancy?.error || "Xatolik yuz berdi"),
-        description: err.message || "Internet yoki server bilan muammo bo‘lishi mumkin.",
+        description: message,
         variant: "destructive",
       });
     } finally {

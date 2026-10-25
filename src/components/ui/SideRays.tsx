@@ -232,7 +232,9 @@ void main() {
             if (loseCtx) loseCtx.loseContext();
             const canvas = renderer.gl.canvas;
             if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
-          } catch (e) {}
+          } catch {
+            // Ignore context cleanup error
+          }
         }
         rendererRef.current = null;
         uniformsRef.current = null;

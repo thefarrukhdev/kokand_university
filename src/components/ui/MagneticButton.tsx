@@ -12,7 +12,7 @@ interface MagneticButtonProps {
 }
 
 const MagneticButton = ({ children, className = "", onClick, href, target, rel, as = "button" }: MagneticButtonProps) => {
-  const ref = useRef<HTMLButtonElement | HTMLAnchorElement | any>(null);
+  const ref = useRef<HTMLElement | null>(null);
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -36,6 +36,7 @@ const MagneticButton = ({ children, className = "", onClick, href, target, rel, 
     y.set(0);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Component = motion[as] as any;
 
   return (
