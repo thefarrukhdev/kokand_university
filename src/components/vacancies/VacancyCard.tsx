@@ -2,6 +2,7 @@ import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 import { Calendar, ExternalLink } from "lucide-react";
 import { MouseEvent } from "react";
 import { Vacancy } from "@/lib/api-client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import MagneticButton from "@/components/ui/MagneticButton";
 
 interface VacancyCardProps {
@@ -31,6 +32,7 @@ export const linkify = (text: string) => {
 };
 
 const VacancyCard = ({ vacancy, onSubscribe, onViewDetails }: VacancyCardProps) => {
+  const { language, t } = useLanguage();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -40,8 +42,10 @@ const VacancyCard = ({ vacancy, onSubscribe, onViewDetails }: VacancyCardProps) 
     mouseY.set(e.clientY - top);
   };
 
+  const localeCode = language === "ru" ? "ru-RU" : language === "en" ? "en-US" : "uz-UZ";
+
   const formattedDate = vacancy.created_at
-    ? new Date(vacancy.created_at).toLocaleString("uz-UZ", {
+    ? new Date(vacancy.created_at).toLocaleString(localeCode, {
         day: "numeric",
         month: "long",
         year: "numeric",
@@ -93,7 +97,7 @@ const VacancyCard = ({ vacancy, onSubscribe, onViewDetails }: VacancyCardProps) 
             onClick={onViewDetails}
             className="mt-1 text-primary font-medium hover:underline text-sm flex items-center gap-1 w-fit relative z-20"
           >
-            Batafsil <ExternalLink className="w-4 h-4" />
+            {t.vacancy.details || "Batafsil"} <ExternalLink className="w-4 h-4" />
           </button>
         )}
 
@@ -105,7 +109,7 @@ const VacancyCard = ({ vacancy, onSubscribe, onViewDetails }: VacancyCardProps) 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 sm:gap-2 text-primary font-medium hover:underline text-sm sm:text-base relative z-20"
             >
-              Batafsil <ExternalLink className="w-4 h-4 pointer-events-none" />
+              {t.vacancy.details || "Batafsil"} <ExternalLink className="w-4 h-4 pointer-events-none" />
             </a>
           )}
 
@@ -114,7 +118,7 @@ const VacancyCard = ({ vacancy, onSubscribe, onViewDetails }: VacancyCardProps) 
               onClick={onSubscribe}
               className="ml-auto rounded-xl bg-primary px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all z-20"
             >
-              Ro‘yxatdan o‘tish
+              {t.vacancy.apply || "Ro‘yxatdan o‘tish"}
             </MagneticButton>
           )}
         </div>

@@ -30,17 +30,19 @@
     "p4": "Dastur ijtimoiy tarmoqlari sahifalariga quyidagi QR kod orqali o'tish mumkin:",
     "close": "Yopish",
     "more": "Davomi",
-    "partnerships": "Hamkor Tashkilot va Korxonalar"
+    "partnerships": "Hamkor Tashkilot va Korxonalar",
+    "partnersSubtitle": "Yetakchi kompaniyalar bizga ishonadi"
   },
   "contact": {
     "title": "Biz bilan bogʻlaning",
     "subtitle": "Har qanday savol yoki maʼlumot uchun biz bilan bogʻlaning"
   },
   "footer": {
-    "rights": "Barcha huquqlar himoyalangan."
+    "rights": "Barcha huquqlar himoyalangan.",
+    "contactUs": "Aloqa uchun..."
   },
   "vacancy": {
-    "applyTitle": "",
+    "applyTitle": "Ariza topshirish",
     "fullName": "To'liq ism",
     "phone": "Telefon raqam",
     "major": "Yo'nalish",
@@ -49,9 +51,12 @@
     "submitting": "Yuborilmoqda...",
     "success": "Ariza muvaffaqiyatli yuborildi!",
     "error": "Xatolik yuz berdi",
-    "phonePattern": "Telefon raqam +998XXXXXXXXX formatida bo'lishi kerak"
+    "phonePattern": "Telefon raqam +998XXXXXXXXX formatida bo'lishi kerak",
+    "details": "Batafsil",
+    "apply": "Ro'yxatdan o'tish"
   },
   "vacancies": {
+    "title": "E'lonlar",
     "loading": "Vakansiyalar yuklanmoqda...",
     "notFound": "Hech qanday vakansiya topilmadi.",
     "previous": "Oldingi",

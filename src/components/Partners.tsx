@@ -37,7 +37,7 @@ const Partners = () => {
             {t.about.partnerships || "Hamkor Tashkilot va Korxonalar"}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base max-w-2xl mx-auto">
-            {"Yetakchi kompaniyalar bizga ishonadi"}
+            {t.about.partnersSubtitle || "Yetakchi kompaniyalar bizga ishonadi"}
           </p>
         </motion.div>
       </div>

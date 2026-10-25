@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import uzTranslations from "@/locales/uz.json";
+import ruTranslations from "@/locales/ru.json";
+import enTranslations from "@/locales/en.json";
 
 export type Language = "uz" | "ru" | "en";
 export type Translations = typeof uzTranslations;
@@ -12,8 +14,8 @@ interface LanguageContextType {
 
 const translations: Record<Language, Translations> = {
   uz: uzTranslations,
-  ru: uzTranslations, // Fallback until ru.json is created
-  en: uzTranslations, // Fallback until en.json is created
+  ru: ruTranslations,
+  en: enTranslations,
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -38,6 +40,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {

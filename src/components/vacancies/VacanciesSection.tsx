@@ -31,7 +31,7 @@ const VacanciesSection = () => {
       <section id="vacancies" className="py-20 bg-transparent">
         <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
           <h2 className="flex justify-center text-3xl font-bold mb-6">
-            E'lonlar
+            {t.vacancies.title || t.nav.vacancies || "E'lonlar"}
           </h2>
           <VacanciesList onSubscribe={handleSubscribe} />
         </div>

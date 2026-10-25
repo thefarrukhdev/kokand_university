@@ -93,13 +93,13 @@ const VacancyModal = ({ vacancy, onClose }: VacancyModalProps) => {
         </button>
 
         <h3 className="text-2xl font-bold text-foreground pr-8 mb-6">
-          {vacancy.title} ga ariza topshirish
+          {vacancy.title} — {t.vacancy.applyTitle || "Ariza topshirish"}
         </h3>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              To‘liq ismingiz <span className="text-destructive">*</span>
+              {t.vacancy.fullName || "To‘liq ismingiz"} <span className="text-destructive">*</span>
             </label>
             <input
               {...register("fullName")}
@@ -112,7 +112,7 @@ const VacancyModal = ({ vacancy, onClose }: VacancyModalProps) => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Telefon raqamingiz <span className="text-destructive">*</span>
+              {t.vacancy.phone || "Telefon raqamingiz"} <span className="text-destructive">*</span>
             </label>
             <input
               {...register("phone")}
@@ -125,13 +125,13 @@ const VacancyModal = ({ vacancy, onClose }: VacancyModalProps) => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Mutaxassisligingiz (Yo‘nalish) <span className="text-destructive">*</span>
+              {t.vacancy.major || "Mutaxassisligingiz (Yo‘nalish)"} <span className="text-destructive">*</span>
             </label>
             <input
               {...register("major")}
               type="text"
               className="w-full px-4 py-3 rounded-xl border bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-              placeholder="Masalan: Frontend Developer"
+              placeholder={t.vacancy.majorPlaceholder || "Masalan: Frontend Developer"}
             />
             {errors.major && <p className="text-sm text-destructive">{errors.major.message}</p>}
           </div>
@@ -148,7 +148,7 @@ const VacancyModal = ({ vacancy, onClose }: VacancyModalProps) => {
                 className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
               />
             ) : (
-              "Ariza yuborish"
+              t.vacancy.submit || "Ariza yuborish"
             )}
           </button>
         </form>

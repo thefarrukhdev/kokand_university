@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -10,7 +11,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  
+
   const { t } = useLanguage();
   const { theme } = useTheme();
 
@@ -24,7 +25,7 @@ const Navbar = () => {
     { name: t.nav.contact || "Aloqa", href: "#contact" },
   ];
 
-  // Handle Scroll to toggle glassmorphism
+  // Handle Scroll to toggle solid floating pill
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -36,9 +37,7 @@ const Navbar = () => {
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
-      // close menu first
       setIsOpen(false);
-      // small delay to allow menu animation to finish before smooth scrolling
       setTimeout(() => {
         element.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -46,7 +45,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full px-4 pt-4 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full px-3 sm:px-4 pt-3 sm:pt-4 pointer-events-none">
       {/* Floating Pill Container */}
       <motion.nav
         layout
@@ -57,11 +56,11 @@ const Navbar = () => {
           isOpen ? "rounded-3xl" : "rounded-full"
         } ${
           isScrolled || isOpen
-            ? "bg-card text-card-foreground shadow-xl border border-border/80 py-2 px-4 sm:px-6"
-            : "bg-transparent border-transparent shadow-none py-3 px-4 sm:px-6"
+            ? "bg-card text-card-foreground shadow-xl border border-border/80 py-2 px-3 sm:px-6"
+            : "bg-transparent border-transparent shadow-none py-3 px-3 sm:px-6"
         }`}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           {/* Logo */}
           <a
             href="#hero"
@@ -69,18 +68,18 @@ const Navbar = () => {
               e.preventDefault();
               scrollToSection("#hero");
             }}
-            className="flex items-center space-x-2 group z-50 relative"
+            className="flex items-center space-x-2 group z-50 relative shrink-0"
           >
             <img
               src={logoSrc}
               alt="Kokand University logo"
-              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-contain transition-transform group-hover:scale-105 duration-300"
+              className="h-9 w-9 sm:h-11 sm:w-11 rounded-full object-contain transition-transform group-hover:scale-105 duration-300"
             />
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-bold text-primary transition-colors">
+              <span className="text-sm sm:text-base md:text-lg font-bold text-primary transition-colors leading-tight">
                 Kokand University
               </span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
+              <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block leading-none">
                 Qoʻqon Universiteti
               </span>
             </div>
@@ -101,7 +100,6 @@ const Navbar = () => {
                 >
                   {link.name}
                 </button>
-                {/* Sliding background pill (Framer Motion) */}
                 {hoveredIndex === index && (
                   <motion.div
                     layoutId="nav-hover-pill"
@@ -116,23 +114,29 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-2 sm:gap-3 z-50 relative">
+          {/* Right side actions: 3D Link + Language Switcher + Theme Toggle */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 z-50 relative shrink-0">
+            {/* 3D Campus Quick Link (Tablet/Desktop) */}
             <Link
               to="/campus-map"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all duration-300 shadow-sm"
-              title="Qo'qon Universiteti 3D Kampusi"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all duration-300 shadow-sm"
+              title={t.nav.campusMap || "3D Kampus"}
             >
               <Compass className="h-3.5 w-3.5" />
-              <span>3D Kampus</span>
+              <span>{t.nav.campusMap || "3D Kampus"}</span>
             </Link>
 
+            {/* Language Switcher */}
+            <LanguageSwitcher size="sm" />
+
+            {/* Theme Toggle (Day/Night) */}
             <ThemeToggle />
-            
+
             {/* Mobile menu button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              aria-label={isOpen ? "Menyuni yopish" : "Menyuni ochish"}
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -162,11 +166,11 @@ const Navbar = () => {
 
                 <Link
                   to="/campus-map"
-                  className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary rounded-2xl shadow-md transition-all"
+                  className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary rounded-2xl shadow-md transition-all mt-1"
                 >
                   <span className="flex items-center gap-2">
                     <Compass className="h-4 w-4" />
-                    <span>3D Kampus Xaritasi</span>
+                    <span>{t.nav.campusMap || "3D Kampus Xaritasi"}</span>
                   </span>
                   <span className="text-xs opacity-80">3D Tur →</span>
                 </Link>

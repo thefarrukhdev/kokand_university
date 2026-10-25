@@ -1,7 +1,10 @@
 import { Send } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FooterBottom = () => {
+  const { t } = useLanguage();
+
   return (
     <motion.footer
       id="contact"
@@ -11,7 +14,7 @@ const FooterBottom = () => {
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
       <p className="text-sm mb-6 tracking-wide">
-        © 2025 Qo‘qon Universiteti. Barcha huquqlar himoyalangan.
+        © 2025 Kokand University. {t.footer.rights}
       </p>
 
       <div className="flex items-center justify-center">
@@ -20,9 +23,9 @@ const FooterBottom = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
-          aria-label="Telegram sahifasiga o‘tish"
+          aria-label="Telegram"
         >
-          Aloqa uchun...
+          {t.footer.contactUs || "Aloqa uchun..."}
           <Send className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
         </a>
       </div>

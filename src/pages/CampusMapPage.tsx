@@ -10,7 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const CampusMapPage: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
   const { theme } = useTheme();
 
   const [selectedBuildingKey, setSelectedBuildingKey] = useState<BuildingKey | null>(null);
@@ -69,7 +69,6 @@ const CampusMapPage: React.FC = () => {
         {/* Top Header Floating Pill */}
         <MapHeader
           language={language}
-          onLanguageChange={setLanguage}
           onResetCamera={handleResetCamera}
         />
 

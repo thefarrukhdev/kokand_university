@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "home": "Home",
+    "vacancies": "Vacancies",
+    "about": "Step to the Future",
+    "partners": "Partners",
+    "contact": "Contact",
+    "campusMap": "3D Campus"
+  },
+  "hero": {
+    "title": "Alumni",
+    "welcomeCard": {
+      "title": "Welcome!",
+      "description": "Career Development and Graduate Employment Support Center of Kokand University",
+      "cta": "Explore University"
+    },
+    "stats": {
+      "students": "Students",
+      "faculty": "Graduates",
+      "programs": "Grant Holders",
+      "partners": "Scholarship Holders"
+    }
+  },
+  "about": {
+    "title": "Step to the Future",
+    "date": "September 3, 2025",
+    "p1": "On February 14, 2025, during an open dialogue with the nation's youth, the head of our state highlighted three pivotal decisions initiating a brand-new era for youth entrepreneurship.",
+    "p2": "To ensure the implementation of these initiatives, the 'Step to the Future' center was inaugurated at Kokand University, dedicated to advancing graduate employability and market-aligned vocational competencies.",
+    "p3": "Graduating students can scale their innovative 'Start-up' initiatives through the specialized support of the center.",
+    "p4": "You can visit the program's official social media pages using the QR code below:",
+    "close": "Close",
+    "more": "Read More",
+    "partnerships": "Partner Organizations and Enterprises",
+    "partnersSubtitle": "Leading companies trust us"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Reach out to us for any inquiries or detailed information"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "contactUs": "Contact us..."
+  },
+  "vacancy": {
+    "applyTitle": "Submit Application",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "major": "Field of Study",
+    "majorPlaceholder": "Your Field of Study",
+    "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "success": "Application submitted successfully!",
+    "error": "An error occurred",
+    "phonePattern": "Phone number must follow +998XXXXXXXXX format",
+    "details": "Details",
+    "apply": "Register / Apply"
+  },
+  "vacancies": {
+    "title": "Announcements & Vacancies",
+    "loading": "Loading vacancies...",
+    "notFound": "No vacancies found.",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "otp": {
+    "title": "Access Code (OTP)",
+    "email": "Email Address",
+    "sendOTP": "Send Code",
+    "sending": "Sending...",
+    "otpCode": "6-digit Code",
+    "verify": "Verify",
+    "verifying": "Verifying...",
+    "otpSent": "One-time verification code sent to your email",
+    "otpVerified": "Verified! Redirecting to application form...",
+    "error": "An error occurred",
+    "enterEmail": "Enter email address"
+  }
+}
