@@ -125,11 +125,11 @@ const Navbar = () => {
               <span>{t.nav.campusMap || "3D Kampus"}</span>
             </Link>
 
-            {/* Language Switcher */}
-            <LanguageSwitcher size="sm" />
-
-            {/* Theme Toggle (Day/Night) */}
-            <ThemeToggle />
+            {/* Desktop Only: Language Switcher & Theme Toggle */}
+            <div className="hidden md:flex items-center gap-2">
+              <LanguageSwitcher size="sm" />
+              <ThemeToggle />
+            </div>
 
             {/* Mobile menu button */}
             <button
@@ -173,6 +173,16 @@ const Navbar = () => {
                   </span>
                   <span className="text-xs opacity-80">3D Tur →</span>
                 </Link>
+
+                {/* Mobile Bottom Bar: Language & Day/Night Theme */}
+                <div className="flex items-center justify-between px-3.5 py-2.5 mt-2 bg-muted/60 dark:bg-muted/40 rounded-2xl border border-border/60">
+                  <div className="flex items-center gap-2">
+                    <LanguageSwitcher size="sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
