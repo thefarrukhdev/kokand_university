@@ -22,7 +22,6 @@ const Navbar = () => {
     { name: t.nav.vacancies || "E'lonlar", href: "#vacancies" },
     { name: t.nav.about || "Kelajakka Qadam", href: "#about" },
     { name: t.nav.partners || "Hamkorlar", href: "#partners" },
-    { name: t.nav.contact || "Aloqa", href: "#contact" },
   ];
 
   // Handle Scroll to toggle solid floating pill
