@@ -46,7 +46,7 @@ const CampusMapPage: React.FC = () => {
   const activeBuilding = selectedBuildingKey ? BUILDINGS_DATA[selectedBuildingKey] : null;
 
   return (
-    <div className="relative z-20 w-screen h-screen overflow-hidden bg-background font-sans select-none">
+    <div className="relative z-20 w-full h-[100dvh] overflow-hidden bg-background font-sans select-none">
       {/* 3D WebGL Campus Canvas */}
       <Campus3DScene
         onBuildingSelect={handleBuildingSelect}
@@ -65,7 +65,7 @@ const CampusMapPage: React.FC = () => {
       />
 
       {/* UI Overlay Container */}
-      <div className="pointer-events-none absolute inset-0 z-30 flex flex-col justify-between p-2 pt-3 sm:p-6 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-30 flex flex-col justify-between p-2 pt-[max(env(safe-area-inset-top),0.75rem)] sm:p-6 overflow-hidden">
         {/* Top Header Floating Pill */}
         <MapHeader
           language={language}

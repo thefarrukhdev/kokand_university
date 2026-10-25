@@ -22,7 +22,6 @@ export default defineConfig({
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom"],
           three: ["three"],
-          ogl: ["ogl"],
           motion: ["framer-motion"],
           icons: ["lucide-react", "react-icons"],
         },

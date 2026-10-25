@@ -64,28 +64,28 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({ onClose, onSuccess }) => {
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
-        className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl w-[90%] max-w-md text-center"
+        className="bg-card text-card-foreground border border-border p-5 sm:p-7 md:p-8 rounded-2xl sm:rounded-3xl shadow-2xl w-[92%] sm:w-[90%] max-w-md text-center"
       >
-        <h2 className="text-xl font-semibold mb-4 text-foreground">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-foreground">
           Iltimos, odamligingizni tasdiqlang
         </h2>
 
         {status === "loading" && (
-          <p className="text-gray-600 dark:text-gray-300 text-sm">Tekshirilmoqda...</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Tekshirilmoqda...</p>
         )}
         {status === "verified" && (
-          <p className="text-green-600 font-semibold text-sm">Tasdiqdan o‘tdingiz ✅</p>
+          <p className="text-green-600 dark:text-green-400 font-semibold text-xs sm:text-sm">Tasdiqdan o‘tdingiz ✅</p>
         )}
         {status === "error" && (
-          <p className="text-red-500 text-sm mt-2">
+          <p className="text-destructive text-xs sm:text-sm mt-2">
             Xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.
           </p>
         )}
 
-        <div className="flex justify-center gap-4 mt-6">
+        <div className="flex justify-center gap-4 mt-5 sm:mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-md bg-gray-300 dark:bg-gray-700 text-black dark:text-white"
+            className="px-6 py-2.5 min-h-[44px] rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium transition-colors text-sm"
           >
             Bekor qilish
           </button>

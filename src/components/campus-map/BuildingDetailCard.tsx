@@ -42,7 +42,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.98 }}
           transition={{ type: "spring", damping: 25, stiffness: 320 }}
-          className="pointer-events-auto absolute z-40 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] left-2.5 right-2.5 sm:bottom-auto sm:left-auto sm:right-6 sm:top-24 w-auto sm:w-96 max-h-[50vh] sm:max-h-[calc(100vh-160px)] flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card text-card-foreground shadow-2xl transition-all"
+          className="pointer-events-auto absolute z-40 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] left-2.5 right-2.5 sm:bottom-auto sm:left-auto sm:right-6 sm:top-24 w-auto sm:w-96 max-h-[48dvh] sm:max-h-[calc(100vh-160px)] flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card text-card-foreground shadow-2xl transition-all"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Subtle Mobile Grab Indicator Handle */}
@@ -76,7 +76,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
                 <button
                   onClick={onFocus}
                   type="button"
-                  className="p-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
                   title={MAP_I18N.focusBuilding[language]}
                   aria-label={MAP_I18N.focusBuilding[language]}
                 >
@@ -87,7 +87,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
               <button
                 onClick={onClose}
                 type="button"
-                className="p-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
                 title="Yopish"
                 aria-label="Yopish"
               >

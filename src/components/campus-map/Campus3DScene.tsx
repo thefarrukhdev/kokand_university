@@ -490,16 +490,18 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     renderer.domElement.addEventListener("pointermove", onPointerMove);
     renderer.domElement.addEventListener("pointerup", onPointerUp);
 
-    // 10. Viewport Resize Handler
+    // 10. Viewport Resize Handler (Supporting Window & Mobile VisualViewport)
     const onResize = () => {
       if (!container) return;
       const w = container.clientWidth || window.innerWidth;
       const h = container.clientHeight || window.innerHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(w, h);
     };
     window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
 
     // 11. Delta-timed Render Loop (High precision timer replacing deprecated THREE.Clock)
     let lastTime = performance.now();
@@ -586,6 +588,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       renderer.domElement.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("pointerup", onPointerUp);

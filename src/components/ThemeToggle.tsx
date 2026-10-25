@@ -8,7 +8,7 @@ const ThemeToggle = () => {
     <button
       onClick={toggleTheme}
       type="button"
-      className="p-2 rounded-full border border-border/60 bg-muted/60 hover:bg-muted text-foreground transition-all duration-200 hover:scale-105 shadow-sm shrink-0"
+      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-border/60 bg-muted/60 hover:bg-muted text-foreground transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shrink-0"
       title={theme === "light" ? "Tungi rejim / Ночной режим / Dark mode" : "Kunduzgi rejim / Дневной режим / Light mode"}
       aria-label="Rejimni almashtirish / Сменить тему / Toggle theme"
     >

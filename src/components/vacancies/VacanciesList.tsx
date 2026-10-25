@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
-import VacancyCard, { linkify } from "./VacancyCard";
+import VacancyCard from "./VacancyCard";
 import SkeletonCard from "./SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchVacancies, Vacancy } from "@/lib/api-client";
+import { linkify } from "@/lib/linkify";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -36,7 +36,7 @@ const VacanciesList = ({ onSubscribe }: VacanciesListProps) => {
 
   if (loading)
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
         {[...Array(6)].map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -55,8 +55,8 @@ const VacanciesList = ({ onSubscribe }: VacanciesListProps) => {
   const paginatedVacancies = vacancies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
         {paginatedVacancies.map((v) => (
           <VacancyCard
             key={v.id}
@@ -68,16 +68,17 @@ const VacanciesList = ({ onSubscribe }: VacanciesListProps) => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex items-center justify-center gap-3 mt-6 sm:mt-8">
           <Button
             variant="outline"
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
+            className="min-h-[44px] px-4 py-2 font-semibold"
           >
             {t.vacancies?.previous || "Oldingi"}
           </Button>
 
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs sm:text-sm font-medium text-muted-foreground px-2">
             {page} / {totalPages}
           </div>
 
@@ -85,6 +86,7 @@ const VacanciesList = ({ onSubscribe }: VacanciesListProps) => {
             variant="outline"
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
+            className="min-h-[44px] px-4 py-2 font-semibold"
           >
             {t.vacancies?.next || "Keyingi"}
           </Button>
@@ -93,11 +95,13 @@ const VacanciesList = ({ onSubscribe }: VacanciesListProps) => {
 
       <Dialog open={!!detailVacancy} onOpenChange={(open) => !open && setDetailVacancy(null)}>
         {detailVacancy && (
-          <DialogContent className="max-w-lg">
-            <DialogHeader className="flex justify-between items-center">
-              <DialogTitle>{detailVacancy.title}</DialogTitle>
+          <DialogContent className="max-w-lg w-[calc(100%-2rem)] sm:w-full p-5 sm:p-6 rounded-2xl">
+            <DialogHeader className="flex justify-between items-center text-left">
+              <DialogTitle className="text-lg sm:text-xl font-bold pr-6 leading-snug">
+                {detailVacancy.title}
+              </DialogTitle>
             </DialogHeader>
-            <div className="mt-2 text-sm sm:text-base text-foreground space-y-2 break-words max-h-[60vh] overflow-y-auto pr-2 allow-select">
+            <div className="mt-3 text-sm sm:text-base text-foreground space-y-2 break-words max-h-[60vh] overflow-y-auto pr-1 sm:pr-2 allow-select custom-scrollbar">
               {linkify(detailVacancy.description).map((line, i) => (
                 <span key={i} className="block break-words">
                   {line}

@@ -41,7 +41,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         <button
           type="button"
           className={`inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 hover:bg-muted text-foreground font-semibold shadow-sm transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 shrink-0 ${
-            isSmall ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
+            isSmall ? "px-3 py-2 text-xs min-h-[44px] sm:min-h-[38px] sm:px-2.5 sm:py-1.5" : "px-3.5 py-2 text-sm min-h-[44px]"
           } ${open ? "ring-2 ring-primary/30 bg-muted" : ""} ${className}`}
           aria-label="Tilni tanlash / Выбор языка / Select language"
           title="Tilni tanlash / Выбор языка / Select language"
@@ -59,7 +59,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="z-[100] min-w-[145px] rounded-2xl border border-border/80 bg-card p-1.5 text-card-foreground shadow-2xl"
+        className="z-[100] min-w-[150px] rounded-2xl border border-border/80 bg-card p-1.5 text-card-foreground shadow-2xl"
       >
         {LANGUAGES.map((item) => {
           const isActive = language === item.key;
@@ -70,7 +70,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 setLanguage(item.key);
                 setOpen(false);
               }}
-              className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
+              className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium cursor-pointer transition-colors min-h-[44px] ${
                 isActive
                   ? "bg-primary text-primary-foreground font-bold shadow-sm"
                   : "text-foreground hover:bg-muted focus:bg-muted"

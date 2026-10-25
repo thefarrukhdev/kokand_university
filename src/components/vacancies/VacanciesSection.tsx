@@ -28,9 +28,9 @@ const VacanciesSection = () => {
 
   return (
     <>
-      <section id="vacancies" className="py-20 bg-transparent">
+      <section id="vacancies" className="py-12 sm:py-16 md:py-20 bg-transparent">
         <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
-          <h2 className="flex justify-center text-3xl font-bold mb-6">
+          <h2 className="flex justify-center text-center text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8">
             {t.vacancies.title || t.nav.vacancies || "E'lonlar"}
           </h2>
           <VacanciesList onSubscribe={handleSubscribe} />

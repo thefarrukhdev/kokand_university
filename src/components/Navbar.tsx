@@ -44,7 +44,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full px-3 sm:px-4 pt-3 sm:pt-4 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full px-2.5 sm:px-4 pt-[max(env(safe-area-inset-top),0.625rem)] pointer-events-none">
       {/* Floating Pill Container */}
       <motion.nav
         layout
@@ -52,11 +52,11 @@ const Navbar = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className={`pointer-events-auto w-full max-w-5xl transition-all duration-300 ${
-          isOpen ? "rounded-3xl" : "rounded-full"
+          isOpen ? "rounded-2xl sm:rounded-3xl" : "rounded-full"
         } ${
           isScrolled || isOpen
             ? "bg-card text-card-foreground shadow-xl border border-border/80 py-2 px-3 sm:px-6"
-            : "bg-transparent border-transparent shadow-none py-3 px-3 sm:px-6"
+            : "bg-transparent border-transparent shadow-none py-2.5 sm:py-3 px-3 sm:px-6"
         }`}
       >
         <div className="flex items-center justify-between gap-2">
@@ -124,7 +124,7 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition-all"
               aria-label={isOpen ? "Menyuni yopish" : "Menyuni ochish"}
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -142,12 +142,12 @@ const Navbar = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="md:hidden overflow-hidden"
             >
-              <div className="py-4 mt-2 border-t border-border/50 flex flex-col gap-2">
+              <div className="py-3 mt-2 border-t border-border/50 flex flex-col gap-2 max-h-[calc(85dvh-4.5rem)] overflow-y-auto custom-scrollbar">
                 {navLinks.map((link) => (
                   <button
                     key={link.name}
                     onClick={() => scrollToSection(link.href)}
-                    className="text-left px-4 py-3 text-sm font-medium text-foreground bg-primary/5 hover:bg-primary/10 rounded-2xl transition-colors"
+                    className="text-left px-4 py-3 min-h-[44px] flex items-center text-sm font-medium text-foreground bg-primary/5 hover:bg-primary/10 active:bg-primary/15 rounded-xl transition-colors"
                   >
                     {link.name}
                   </button>
@@ -155,7 +155,8 @@ const Navbar = () => {
 
                 <Link
                   to="/campus-map"
-                  className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary rounded-2xl shadow-md transition-all mt-1"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-between px-4 py-3 min-h-[44px] text-sm font-semibold text-primary-foreground bg-primary rounded-xl shadow-md transition-all mt-1 active:scale-[0.99]"
                 >
                   <span className="flex items-center gap-2">
                     <Compass className="h-4 w-4" />
@@ -165,7 +166,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Mobile Bottom Bar: Language & Day/Night Theme */}
-                <div className="flex items-center justify-between px-3.5 py-2.5 mt-2 bg-muted/60 dark:bg-muted/40 rounded-2xl border border-border/60">
+                <div className="flex items-center justify-between px-3.5 py-2.5 mt-2 bg-muted/60 dark:bg-muted/40 rounded-xl border border-border/60">
                   <div className="flex items-center gap-2">
                     <LanguageSwitcher size="sm" />
                   </div>

@@ -45,12 +45,12 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
   return (
     <header className="w-full flex justify-center">
       {/* Unified Floating Pill matching Kokand University signature Navbar */}
-      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full bg-card text-card-foreground py-2 px-3 sm:py-2.5 sm:px-6 shadow-xl border border-border/80 transition-all">
+      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full bg-card text-card-foreground py-1.5 px-2.5 sm:py-2.5 sm:px-6 shadow-xl border border-border/80 transition-all">
         {/* Left Side: Back Link & University Identity */}
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <Link
             to="/"
-            className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-full text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/5 transition-colors shrink-0"
+            className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center sm:justify-start gap-1.5 p-2 sm:px-3 sm:py-2 rounded-full text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all shrink-0"
             title={MAP_I18N.home[language]}
             aria-label={MAP_I18N.home[language]}
           >
@@ -83,7 +83,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
           <button
             onClick={onResetCamera}
             type="button"
-            className="p-1.5 sm:p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all"
             title={MAP_I18N.resetCamera[language]}
             aria-label={MAP_I18N.resetCamera[language]}
           >
@@ -94,7 +94,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
           <button
             onClick={toggleFullscreen}
             type="button"
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all hidden sm:inline-flex"
+            className="min-w-[44px] min-h-[44px] items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all hidden sm:inline-flex"
             title={MAP_I18N.fullscreen[language]}
             aria-label={MAP_I18N.fullscreen[language]}
           >

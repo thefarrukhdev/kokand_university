@@ -7,6 +7,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({ token: null, setToken: () => {} });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
