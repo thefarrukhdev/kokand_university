@@ -5,45 +5,80 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare.js";
 import { BUILDINGS_DATA } from "@/data/buildings";
 import { BuildingKey } from "@/types/campus-map";
+import { CAMERA_PRESETS } from "./constants";
 
 interface Campus3DSceneProps {
   onBuildingSelect: (key: BuildingKey | null) => void;
   selectedBuildingKey: BuildingKey | null;
-  onScreenPositionChange: (pos: { x: number; y: number } | null) => void;
   onLoadingProgress: (percent: number) => void;
   resetSignal: number;
 }
 
+/**
+ * Searches the scene hierarchy upwards to match any known building key
+ */
+const findBuildingKeyFromObject = (object: THREE.Object3D): BuildingKey | null => {
+  let curr: THREE.Object3D | null = object;
+  const buildingKeys = Object.keys(BUILDINGS_DATA) as BuildingKey[];
+
+  while (curr) {
+    const name = curr.name.toLowerCase();
+    for (const key of buildingKeys) {
+      if (name.includes(key)) {
+        return key;
+      }
+    }
+    curr = curr.parent;
+  }
+  return null;
+};
+
 export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   onBuildingSelect,
   selectedBuildingKey,
-  onScreenPositionChange,
   onLoadingProgress,
   resetSignal,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // References to keep across re-renders without re-initializing WebGL
+  // Core Three.js references
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
-  const buildingMeshesRef = useRef<Map<BuildingKey, THREE.Vector3>>(new Map());
+  const buildingPositionsRef = useRef<Map<BuildingKey, THREE.Vector3>>(new Map());
+  const beaconGroupRef = useRef<THREE.Group | null>(null);
 
-  // Animation state
+  // Camera animation interpolation refs
   const isAnimatingRef = useRef(false);
-  const targetCameraPosRef = useRef(new THREE.Vector3());
-  const targetLookAtRef = useRef(new THREE.Vector3());
-  const currentFocusPosRef = useRef(new THREE.Vector3());
+  const targetCameraPosRef = useRef(new THREE.Vector3(
+    CAMERA_PRESETS.initialPosition.x,
+    CAMERA_PRESETS.initialPosition.y,
+    CAMERA_PRESETS.initialPosition.z
+  ));
+  const targetLookAtRef = useRef(new THREE.Vector3(
+    CAMERA_PRESETS.initialTarget.x,
+    CAMERA_PRESETS.initialTarget.y,
+    CAMERA_PRESETS.initialTarget.z
+  ));
 
-  // Handle building selection via bottom bar / external click
+  // Reactive state refs to prevent re-instantiating WebGL
+  const selectedBuildingKeyRef = useRef(selectedBuildingKey);
+  selectedBuildingKeyRef.current = selectedBuildingKey;
+
+  const onBuildingSelectRef = useRef(onBuildingSelect);
+  onBuildingSelectRef.current = onBuildingSelect;
+
+  const onLoadingProgressRef = useRef(onLoadingProgress);
+  onLoadingProgressRef.current = onLoadingProgress;
+
+  // Handle building selection camera flight
   useEffect(() => {
     if (!selectedBuildingKey || !cameraRef.current || !controlsRef.current) return;
 
-    const buildingPos = buildingMeshesRef.current.get(selectedBuildingKey);
+    const buildingPos = buildingPositionsRef.current.get(selectedBuildingKey);
     const buildingInfo = BUILDINGS_DATA[selectedBuildingKey];
 
     if (buildingPos && buildingInfo) {
-      currentFocusPosRef.current.copy(buildingPos);
       targetLookAtRef.current.copy(buildingPos);
 
       const offset = buildingInfo.cameraOffset || { x: 15, y: 13, z: 15 };
@@ -56,22 +91,30 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     }
   }, [selectedBuildingKey]);
 
-  // Handle Reset Camera signal
+  // Handle Camera Reset signal
   useEffect(() => {
     if (resetSignal === 0 || !cameraRef.current || !controlsRef.current) return;
 
-    targetCameraPosRef.current.set(22, 22, 22);
-    targetLookAtRef.current.set(0, 0, 0);
+    targetCameraPosRef.current.set(
+      CAMERA_PRESETS.initialPosition.x,
+      CAMERA_PRESETS.initialPosition.y,
+      CAMERA_PRESETS.initialPosition.z
+    );
+    targetLookAtRef.current.set(
+      CAMERA_PRESETS.initialTarget.x,
+      CAMERA_PRESETS.initialTarget.y,
+      CAMERA_PRESETS.initialTarget.z
+    );
     isAnimatingRef.current = true;
-    onBuildingSelect(null);
-    onScreenPositionChange(null);
-  }, [resetSignal, onBuildingSelect, onScreenPositionChange]);
+    onBuildingSelectRef.current(null);
+  }, [resetSignal]);
 
+  // Main WebGL Initialization - Runs strictly ONCE on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // 1. Scene, Camera, Renderer
+    // 1. Scene & Atmosphere
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
@@ -81,13 +124,20 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
 
+    // 2. Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(20, 20, 20);
+    camera.position.set(
+      CAMERA_PRESETS.initialPosition.x,
+      CAMERA_PRESETS.initialPosition.y,
+      CAMERA_PRESETS.initialPosition.z
+    );
     cameraRef.current = camera;
 
+    // 3. High-Performance WebGL Renderer
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: "high-performance",
+      alpha: false,
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -97,7 +147,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     renderer.shadowMap.type = THREE.PCFShadowMap;
     container.appendChild(renderer.domElement);
 
-    // 2. Sky Dome
+    // 4. Procedural Sky Dome
     const skyCanvas = document.createElement("canvas");
     skyCanvas.width = 2;
     skyCanvas.height = 512;
@@ -122,25 +172,26 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const skyDome = new THREE.Mesh(skyGeo, skyMat);
     scene.add(skyDome);
 
-    // 3. Orbit Controls
+    // 5. Orbit Controls with Physics Damping
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2 - 0.08;
     controls.minPolarAngle = 0.1;
-    controls.minDistance = 2;
-    controls.maxDistance = 80;
+    controls.minDistance = CAMERA_PRESETS.boundaries.minDistance;
+    controls.maxDistance = CAMERA_PRESETS.boundaries.maxDistance;
     controlsRef.current = controls;
 
-    const stopAutoPilot = () => {
+    // Interrupt autopilot flight on user interaction
+    const stopAutopilot = () => {
       if (isAnimatingRef.current) {
         isAnimatingRef.current = false;
       }
     };
-    renderer.domElement.addEventListener("pointerdown", stopAutoPilot);
-    renderer.domElement.addEventListener("wheel", stopAutoPilot, { passive: true });
+    renderer.domElement.addEventListener("pointerdown", stopAutopilot);
+    renderer.domElement.addEventListener("wheel", stopAutopilot, { passive: true });
 
-    // 4. Lighting & Lensflare
+    // 6. Lighting & Sun Lensflare
     const ambientLight = new THREE.AmbientLight(0x4a5a80, 0.45);
     scene.add(ambientLight);
 
@@ -173,7 +224,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     sunSphere.position.set(sunX, sunY, sunZ);
     scene.add(sunSphere);
 
-    // Create procedural Lensflare
+    // Procedural flare texture generator
     const createFlareTexture = (size: number, isMain: boolean) => {
       const fCanvas = document.createElement("canvas");
       fCanvas.width = size;
@@ -208,7 +259,37 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     lensflare.addElement(new LensflareElement(textureRingGlow, 60, 0.7, new THREE.Color(0xb3e5fc)));
     sunSphere.add(lensflare);
 
-    // 5. Load GLTF Model
+    // 7. Interactive 3D Beacon (Selected building marker)
+    const beaconGroup = new THREE.Group();
+    beaconGroup.visible = false;
+    scene.add(beaconGroup);
+    beaconGroupRef.current = beaconGroup;
+
+    // Base glowing ring
+    const ringGeo = new THREE.RingGeometry(1.2, 1.8, 32);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x9c1447, // Kokand University Burgundy
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const beaconRing = new THREE.Mesh(ringGeo, ringMat);
+    beaconGroup.add(beaconRing);
+
+    // Outer faint pulse ring
+    const outerRingGeo = new THREE.RingGeometry(1.9, 2.3, 32);
+    outerRingGeo.rotateX(-Math.PI / 2);
+    const outerRingMat = new THREE.MeshBasicMaterial({
+      color: 0x003399, // Kokand University Navy
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.4,
+    });
+    const outerBeaconRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+    beaconGroup.add(outerBeaconRing);
+
+    // 8. GLTF Model Loader with PBR Material Calibration
     const fixMaterial = (mat: THREE.Material) => {
       const m = mat as THREE.MeshStandardMaterial;
       if (m.isMeshStandardMaterial) {
@@ -242,43 +323,38 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
               (mesh.material as THREE.Material).vertexColors = true;
             }
 
-            // Register building world position if object matches building keys
-            const objName = mesh.name.toLowerCase();
-            const parentName = mesh.parent?.name.toLowerCase() || "";
-            const matchedKey = (Object.keys(BUILDINGS_DATA) as BuildingKey[]).find(
-              (key) => objName.includes(key) || parentName.includes(key)
-            );
-
-            if (matchedKey && !buildingMeshesRef.current.has(matchedKey)) {
+            // Register world positions for each building key
+            const matchedKey = findBuildingKeyFromObject(mesh);
+            if (matchedKey && !buildingPositionsRef.current.has(matchedKey)) {
               const worldPos = new THREE.Vector3();
-              if (mesh.parent && parentName.includes(matchedKey)) {
+              if (mesh.parent && mesh.parent.name.toLowerCase().includes(matchedKey)) {
                 mesh.parent.getWorldPosition(worldPos);
               } else {
                 mesh.getWorldPosition(worldPos);
               }
-              buildingMeshesRef.current.set(matchedKey, worldPos);
+              buildingPositionsRef.current.set(matchedKey, worldPos);
             }
           }
         });
 
         scene.add(model);
-        onLoadingProgress(100);
+        onLoadingProgressRef.current(100);
       },
       (xhr) => {
         if (xhr.lengthComputable && xhr.total > 0) {
           const percent = Math.round((xhr.loaded / xhr.total) * 100);
-          onLoadingProgress(Math.min(percent, 98));
+          onLoadingProgressRef.current(Math.min(percent, 98));
         } else {
-          onLoadingProgress(70);
+          onLoadingProgressRef.current(75);
         }
       },
       (err) => {
         console.error("3D Campus model load error:", err);
-        onLoadingProgress(100);
+        onLoadingProgressRef.current(100);
       }
     );
 
-    // 6. Raycast Click Interaction
+    // 9. Pointer Raycasting for Clicks & Hover Pointer State
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
@@ -289,12 +365,31 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       pointerDownTime = Date.now();
     };
 
+    const onPointerMove = (e: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      let isHoveringBuilding = false;
+      for (const hit of intersects) {
+        if (findBuildingKeyFromObject(hit.object)) {
+          isHoveringBuilding = true;
+          break;
+        }
+      }
+
+      container.style.cursor = isHoveringBuilding ? "pointer" : "grab";
+    };
+
     const onPointerUp = (e: MouseEvent) => {
       const deltaX = Math.abs(e.clientX - pointerDownPos.x);
       const deltaY = Math.abs(e.clientY - pointerDownPos.y);
       const duration = Date.now() - pointerDownTime;
 
-      // Ignore drags and long presses
+      // Filter out drags, pans, and long presses
       if (deltaX > 6 || deltaY > 6 || duration > 300) return;
 
       const rect = renderer.domElement.getBoundingClientRect();
@@ -304,40 +399,28 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(scene.children, true);
 
-      if (intersects.length > 0) {
-        const hit = intersects.find((item) => {
-          const oName = item.object.name.toLowerCase();
-          const pName = item.object.parent?.name.toLowerCase() || "";
-          return (Object.keys(BUILDINGS_DATA) as BuildingKey[]).some(
-            (k) => oName.includes(k) || pName.includes(k)
-          );
-        });
-
-        if (hit) {
-          const oName = hit.object.name.toLowerCase();
-          const pName = hit.object.parent?.name.toLowerCase() || "";
-          const foundKey = (Object.keys(BUILDINGS_DATA) as BuildingKey[]).find(
-            (k) => oName.includes(k) || pName.includes(k)
-          );
-
-          if (foundKey) {
-            onBuildingSelect(foundKey);
-            return;
-          }
+      let foundKey: BuildingKey | null = null;
+      for (const hit of intersects) {
+        const key = findBuildingKeyFromObject(hit.object);
+        if (key) {
+          foundKey = key;
+          break;
         }
       }
 
-      // If clicked on ground or empty space, deselect
-      if (!isAnimatingRef.current) {
-        onBuildingSelect(null);
-        onScreenPositionChange(null);
+      if (foundKey) {
+        onBuildingSelectRef.current(foundKey);
+      } else if (!isAnimatingRef.current) {
+        // Deselect if user clicked empty ground
+        onBuildingSelectRef.current(null);
       }
     };
 
     renderer.domElement.addEventListener("mousedown", onPointerDown);
+    renderer.domElement.addEventListener("mousemove", onPointerMove);
     renderer.domElement.addEventListener("mouseup", onPointerUp);
 
-    // 7. Resize handling
+    // 10. Window Resize Observer
     const onResize = () => {
       if (!container) return;
       const w = container.clientWidth || window.innerWidth;
@@ -348,15 +431,20 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     };
     window.addEventListener("resize", onResize);
 
-    // 8. Animation Loop
+    // 11. Delta-timed Render Loop
+    const clock = new THREE.Clock();
     let animId: number;
+
     const animate = () => {
       animId = requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
 
-      // Camera flight interpolation
+      // Camera flight interpolation with frame-rate independence
       if (isAnimatingRef.current) {
-        camera.position.lerp(targetCameraPosRef.current, 0.05);
-        controls.target.lerp(targetLookAtRef.current, 0.05);
+        const lerpFactor = 1 - Math.exp(-6 * delta); // Framerate-independent lerp
+        camera.position.lerp(targetCameraPosRef.current, lerpFactor);
+        controls.target.lerp(targetLookAtRef.current, lerpFactor);
 
         if (
           camera.position.distanceTo(targetCameraPosRef.current) < 0.1 &&
@@ -368,12 +456,9 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
 
       controls.update();
 
-      // Campus boundary constraints
+      // Enforce campus boundaries
       if (!isAnimatingRef.current) {
-        const minX = -40;
-        const maxX = 26;
-        const minZ = -70;
-        const maxZ = 35;
+        const { minX, maxX, minZ, maxZ, minHeight } = CAMERA_PRESETS.boundaries;
         const target = controls.target;
         let deltaX = 0;
         let deltaZ = 0;
@@ -389,33 +474,28 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
           camera.position.x += deltaX;
           camera.position.z += deltaZ;
         }
-      }
 
-      // Minimum camera height from ground
-      const minHeight = 1.5;
-      if (camera.position.y < minHeight) {
-        const diff = minHeight - camera.position.y;
-        camera.position.y = minHeight;
-        controls.target.y += diff;
-      }
-
-      // Update projected 2D Billboard Screen Position
-      if (selectedBuildingKey && buildingMeshesRef.current.has(selectedBuildingKey)) {
-        const bPos = buildingMeshesRef.current.get(selectedBuildingKey)!;
-        const bData = BUILDINGS_DATA[selectedBuildingKey];
-        const proj = bPos.clone();
-        proj.y += bData.offsetY;
-        proj.project(camera);
-
-        const isBehindCamera = proj.z > 1;
-        if (!isBehindCamera) {
-          const rect = renderer.domElement.getBoundingClientRect();
-          const screenX = (proj.x * 0.5 + 0.5) * rect.width + rect.left;
-          const screenY = (proj.y * -0.5 + 0.5) * rect.height + rect.top;
-          onScreenPositionChange({ x: screenX, y: screenY });
-        } else {
-          onScreenPositionChange(null);
+        if (camera.position.y < minHeight) {
+          const diff = minHeight - camera.position.y;
+          camera.position.y = minHeight;
+          controls.target.y += diff;
         }
+      }
+
+      // Update 3D Selection Beacon
+      const activeKey = selectedBuildingKeyRef.current;
+      if (activeKey && buildingPositionsRef.current.has(activeKey)) {
+        const bPos = buildingPositionsRef.current.get(activeKey)!;
+        const bData = BUILDINGS_DATA[activeKey];
+        beaconGroup.position.set(bPos.x, bPos.y + (bData.offsetY > 0 ? 0.2 : -0.2), bPos.z);
+        beaconGroup.visible = true;
+
+        // Subtle harmonic pulse
+        const pulse = 1 + Math.sin(elapsed * 4) * 0.1;
+        beaconRing.scale.set(pulse, pulse, pulse);
+        outerBeaconRing.scale.set(1.1 - Math.sin(elapsed * 4) * 0.08, 1.1 - Math.sin(elapsed * 4) * 0.08, 1);
+      } else {
+        beaconGroup.visible = false;
       }
 
       renderer.render(scene, camera);
@@ -423,19 +503,20 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
 
     animate();
 
-    // 9. WebGL Cleanup & Teardown
+    // 12. Graceful Teardown & Resource Disposal
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
       renderer.domElement.removeEventListener("mousedown", onPointerDown);
+      renderer.domElement.removeEventListener("mousemove", onPointerMove);
       renderer.domElement.removeEventListener("mouseup", onPointerUp);
-      renderer.domElement.removeEventListener("pointerdown", stopAutoPilot);
-      renderer.domElement.removeEventListener("wheel", stopAutoPilot);
+      renderer.domElement.removeEventListener("pointerdown", stopAutopilot);
+      renderer.domElement.removeEventListener("wheel", stopAutopilot);
 
       controls.dispose();
       renderer.dispose();
 
-      // Dispose textures & geometries in scene
+      // Dispose all geometry and materials in the scene
       scene.traverse((obj) => {
         if ((obj as THREE.Mesh).isMesh) {
           const mesh = obj as THREE.Mesh;
@@ -453,12 +534,21 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       skyMat.dispose();
       textureMainGlow.dispose();
       textureRingGlow.dispose();
+      ringGeo.dispose();
+      ringMat.dispose();
+      outerRingGeo.dispose();
+      outerRingMat.dispose();
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [selectedBuildingKey, onBuildingSelect, onScreenPositionChange, onLoadingProgress]);
+  }, []); // Strictly empty deps: initialized ONCE, reactive changes handled via refs & specialized effects!
 
-  return <div ref={containerRef} className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing" />;
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing select-none"
+    />
+  );
 };
