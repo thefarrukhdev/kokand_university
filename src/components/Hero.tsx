@@ -72,10 +72,10 @@ const Hero = () => {
 
                 <Link
                   to="/campus-map"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-background/80 hover:bg-background text-foreground border border-border/80 hover:border-primary/50 shadow-md backdrop-blur-md transition-all group"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-background/80 hover:bg-background text-foreground border border-border/80 hover:border-primary/50 shadow-md backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group"
                 >
-                  <Compass className="h-5 w-5 text-primary group-hover:rotate-45 transition-transform duration-300" />
-                  <span>3D Kampus</span>
+                  <Compass className="h-5 w-5 text-primary group-hover:rotate-90 transition-transform duration-500" />
+                  <span>{t.nav.campusMap || "3D Kampus"}</span>
                 </Link>
               </div>
             </div>

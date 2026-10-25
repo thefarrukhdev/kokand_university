@@ -113,18 +113,8 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right side actions: 3D Link + Language Switcher + Theme Toggle */}
+          {/* Right side actions: Language Switcher + Theme Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 z-50 relative shrink-0">
-            {/* 3D Campus Quick Link (Tablet/Desktop) */}
-            <Link
-              to="/campus-map"
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all duration-300 shadow-sm"
-              title={t.nav.campusMap || "3D Kampus"}
-            >
-              <Compass className="h-3.5 w-3.5" />
-              <span>{t.nav.campusMap || "3D Kampus"}</span>
-            </Link>
-
             {/* Desktop Only: Language Switcher & Theme Toggle */}
             <div className="hidden md:flex items-center gap-2">
               <LanguageSwitcher size="sm" />
