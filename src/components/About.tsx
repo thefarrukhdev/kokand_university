@@ -18,6 +18,7 @@ const ExpandableText = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative">
       <motion.div
+        initial={{ maxHeight: 170 }}
         animate={{ maxHeight: expanded ? 2000 : 170 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
         className="overflow-hidden space-y-3 text-sm sm:text-base leading-relaxed text-foreground allow-select"
