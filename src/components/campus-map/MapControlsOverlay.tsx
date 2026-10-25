@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { MapHeader } from "./MapHeader";
 import { BuildingSelectorDock } from "./BuildingSelectorDock";
-import { NavigationGuideModal } from "./NavigationGuideModal";
 import { CampusMapLoader } from "./CampusMapLoader";
 import { BuildingKey } from "@/types/campus-map";
 import { Language } from "@/contexts/LanguageContext";
@@ -17,8 +16,8 @@ export interface MapControlsOverlayProps {
 }
 
 /**
- * Clean facade overlay component composing MapHeader, BuildingSelectorDock,
- * NavigationGuideModal, and CampusMapLoader.
+ * Backward-compatible facade overlay component composing MapHeader,
+ * BuildingSelectorDock, and CampusMapLoader.
  */
 export const MapControlsOverlay: React.FC<MapControlsOverlayProps> = ({
   language,
@@ -29,8 +28,6 @@ export const MapControlsOverlay: React.FC<MapControlsOverlayProps> = ({
   isLoading,
   loadProgress,
 }) => {
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
-
   return (
     <>
       <CampusMapLoader
@@ -44,7 +41,6 @@ export const MapControlsOverlay: React.FC<MapControlsOverlayProps> = ({
           language={language}
           onLanguageChange={onLanguageChange}
           onResetCamera={onResetCamera}
-          onOpenGuide={() => setIsGuideOpen(true)}
         />
 
         <BuildingSelectorDock
@@ -53,12 +49,6 @@ export const MapControlsOverlay: React.FC<MapControlsOverlayProps> = ({
           onSelectBuilding={onSelectBuilding}
         />
       </div>
-
-      <NavigationGuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-        language={language}
-      />
     </>
   );
 };

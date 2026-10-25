@@ -3,19 +3,21 @@ import { Campus3DScene } from "@/components/campus-map/Campus3DScene";
 import { BuildingDetailCard } from "@/components/campus-map/BuildingDetailCard";
 import { MapHeader } from "@/components/campus-map/MapHeader";
 import { BuildingSelectorDock } from "@/components/campus-map/BuildingSelectorDock";
-import { NavigationGuideModal } from "@/components/campus-map/NavigationGuideModal";
 import { CampusMapLoader } from "@/components/campus-map/CampusMapLoader";
 import { BUILDINGS_DATA } from "@/data/buildings";
 import { BuildingKey } from "@/types/campus-map";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const CampusMapPage: React.FC = () => {
   const { language, setLanguage } = useLanguage();
+  const { theme } = useTheme();
+
   const [selectedBuildingKey, setSelectedBuildingKey] = useState<BuildingKey | null>(null);
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [resetSignal, setResetSignal] = useState(0);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [focusSignal, setFocusSignal] = useState(0);
 
   const handleLoadingProgress = useCallback((percent: number) => {
     setLoadProgress(percent);
@@ -38,25 +40,24 @@ const CampusMapPage: React.FC = () => {
   }, []);
 
   const handleFocusBuilding = useCallback(() => {
-    if (selectedBuildingKey) {
-      // Re-trigger by nudging reset signal or keeping key
-      setSelectedBuildingKey((prev) => (prev ? { ...BUILDINGS_DATA[prev] }.id : null));
-    }
-  }, [selectedBuildingKey]);
+    setFocusSignal((prev) => prev + 1);
+  }, []);
 
   const activeBuilding = selectedBuildingKey ? BUILDINGS_DATA[selectedBuildingKey] : null;
 
   return (
     <div className="relative z-20 w-screen h-screen overflow-hidden bg-background font-sans select-none">
-      {/* 3D WebGL Canvas */}
+      {/* 3D WebGL Campus Canvas */}
       <Campus3DScene
         onBuildingSelect={handleBuildingSelect}
         selectedBuildingKey={selectedBuildingKey}
         onLoadingProgress={handleLoadingProgress}
         resetSignal={resetSignal}
+        focusSignal={focusSignal}
+        theme={theme}
       />
 
-      {/* Brand-Consistent Loading Screen */}
+      {/* Branded Campus Loading Screen */}
       <CampusMapLoader
         isLoading={isLoading}
         loadProgress={loadProgress}
@@ -70,10 +71,9 @@ const CampusMapPage: React.FC = () => {
           language={language}
           onLanguageChange={setLanguage}
           onResetCamera={handleResetCamera}
-          onOpenGuide={() => setIsGuideOpen(true)}
         />
 
-        {/* Selected Building Detail Panel (slides in on selection) */}
+        {/* Selected Building Detail Panel */}
         <BuildingDetailCard
           building={activeBuilding}
           language={language}
@@ -86,15 +86,9 @@ const CampusMapPage: React.FC = () => {
           language={language}
           selectedBuildingKey={selectedBuildingKey}
           onSelectBuilding={handleBuildingSelect}
+          onFocusBuilding={handleFocusBuilding}
         />
       </div>
-
-      {/* Navigation Guide Modal */}
-      <NavigationGuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-        language={language}
-      />
     </div>
   );
 };

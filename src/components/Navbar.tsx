@@ -123,7 +123,7 @@ const Navbar = () => {
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all duration-300 shadow-sm"
               title="Qo'qon Universiteti 3D Kampusi"
             >
-              <Compass className="h-3.5 w-3.5 animate-spin-slow" />
+              <Compass className="h-3.5 w-3.5" />
               <span>3D Kampus</span>
             </Link>
 
