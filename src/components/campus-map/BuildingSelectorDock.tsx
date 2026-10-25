@@ -42,8 +42,8 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
   };
 
   return (
-    <footer className="pointer-events-auto w-full max-w-4xl mx-auto px-2 sm:px-0">
-      <div className="glass-card rounded-2xl border border-border/60 bg-card/85 p-1.5 sm:p-2 shadow-2xl backdrop-blur-xl">
+    <footer className="pointer-events-auto w-full max-w-4xl mx-auto px-2 sm:px-0 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+      <div className="rounded-2xl border border-border/80 bg-card text-card-foreground p-1 sm:p-1.5 shadow-2xl">
         <div
           ref={containerRef}
           onWheel={handleWheel}
@@ -74,7 +74,7 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
                 }}
                 onClick={handleClick}
                 type="button"
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 select-none ${
+                className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 select-none ${
                   isSelected
                     ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
                     : "bg-muted/40 text-foreground/80 hover:bg-muted hover:text-foreground border border-border/30"

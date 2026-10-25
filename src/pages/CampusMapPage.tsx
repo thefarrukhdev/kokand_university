@@ -65,7 +65,7 @@ const CampusMapPage: React.FC = () => {
       />
 
       {/* UI Overlay Container */}
-      <div className="pointer-events-none absolute inset-0 z-30 flex flex-col justify-between p-3 sm:p-6 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-30 flex flex-col justify-between p-2 pt-3 sm:p-6 overflow-hidden">
         {/* Top Header Floating Pill */}
         <MapHeader
           language={language}

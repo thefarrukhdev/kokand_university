@@ -25,7 +25,7 @@ export const CampusMapLoader: React.FC<CampusMapLoaderProps> = ({
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="pointer-events-auto absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 dark:bg-slate-950/85 backdrop-blur-md"
+          className="pointer-events-auto absolute inset-0 z-50 flex flex-col items-center justify-center bg-background"
         >
           <div className="flex flex-col items-center max-w-xs w-full px-6 text-center space-y-4">
             {/* Spinning Brand Badge */}

@@ -501,14 +501,17 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     };
     window.addEventListener("resize", onResize);
 
-    // 11. Delta-timed Render Loop
-    const clock = new THREE.Clock();
+    // 11. Delta-timed Render Loop (High precision timer replacing deprecated THREE.Clock)
+    let lastTime = performance.now();
+    const startTime = performance.now();
     let animId: number;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      const elapsed = clock.getElapsedTime();
+      const currentTime = performance.now();
+      const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
+      lastTime = currentTime;
+      const elapsed = (currentTime - startTime) / 1000;
 
       // Camera flight interpolation with framerate independence
       if (isAnimatingRef.current) {

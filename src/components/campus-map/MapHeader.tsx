@@ -48,12 +48,12 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
   return (
     <header className="w-full flex justify-center">
       {/* Unified Floating Pill matching Kokand University signature Navbar */}
-      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full bg-card text-card-foreground py-2.5 px-3 sm:px-6 shadow-xl border border-border/80 transition-all">
+      <nav className="pointer-events-auto flex items-center justify-between w-full max-w-5xl rounded-full bg-card text-card-foreground py-2 px-2.5 sm:py-2.5 sm:px-6 shadow-xl border border-border/80 transition-all">
         {/* Left Side: Back Link & University Identity */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <Link
             to="/"
-            className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-full text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+            className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-full text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/5 transition-colors shrink-0"
             title={MAP_I18N.home[language]}
             aria-label={MAP_I18N.home[language]}
           >
@@ -61,16 +61,16 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
             <span className="hidden sm:inline">{MAP_I18N.home[language]}</span>
           </Link>
 
-          <div className="h-5 w-px bg-border/60 hidden sm:block" />
+          <div className="h-4 sm:h-5 w-px bg-border/60 shrink-0" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <img
               src={logoSrc}
               alt="Kokand University logo"
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-contain shrink-0"
             />
-            <div className="flex flex-col">
-              <span className="text-xs sm:text-sm font-bold text-primary leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs sm:text-sm font-bold text-primary leading-tight truncate">
                 Kokand University
               </span>
               <span className="text-[10px] text-muted-foreground hidden sm:block leading-none">
@@ -81,9 +81,24 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
         </div>
 
         {/* Right Side: Language Switcher, Theme & Camera Controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Segmented Language Switcher */}
-          <div className="flex items-center rounded-full bg-muted/60 p-0.5 text-[11px] font-semibold border border-border/40">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Mobile compact language toggle (cycles uz -> ru -> en) */}
+          <button
+            onClick={() => {
+              const next: Record<Language, Language> = { uz: "ru", ru: "en", en: "uz" };
+              onLanguageChange(next[language]);
+            }}
+            type="button"
+            className="sm:hidden px-2 py-1 rounded-full text-[11px] font-bold uppercase bg-muted/70 text-foreground hover:bg-muted border border-border/60 transition-all flex items-center gap-0.5"
+            title="Tilni almashtirish"
+            aria-label="Tilni almashtirish"
+          >
+            <span>{language}</span>
+            <span className="text-[9px] text-muted-foreground">▾</span>
+          </button>
+
+          {/* Desktop Segmented Language Switcher */}
+          <div className="hidden sm:flex items-center rounded-full bg-muted/60 p-0.5 text-[11px] font-semibold border border-border/40">
             {(["uz", "ru", "en"] as const).map((lang) => (
               <button
                 key={lang}
@@ -107,7 +122,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
           <button
             onClick={onResetCamera}
             type="button"
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
+            className="p-1.5 sm:p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
             title={MAP_I18N.resetCamera[language]}
             aria-label={MAP_I18N.resetCamera[language]}
           >

@@ -42,11 +42,14 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.98 }}
           transition={{ type: "spring", damping: 25, stiffness: 320 }}
-          className="pointer-events-auto absolute z-40 bottom-20 left-3 right-3 sm:bottom-auto sm:left-auto sm:right-6 sm:top-24 w-auto sm:w-96 max-h-[48vh] sm:max-h-[calc(100vh-160px)] flex flex-col overflow-hidden rounded-2xl glass-card border border-border/60 bg-card/90 shadow-2xl backdrop-blur-xl transition-all"
+          className="pointer-events-auto absolute z-40 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] left-2.5 right-2.5 sm:bottom-auto sm:left-auto sm:right-6 sm:top-24 w-auto sm:w-96 max-h-[50vh] sm:max-h-[calc(100vh-160px)] flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card text-card-foreground shadow-2xl transition-all"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Subtle Mobile Grab Indicator Handle */}
+          <div className="w-8 h-1 rounded-full bg-muted-foreground/30 mx-auto mt-2 sm:hidden shrink-0" />
+
           {/* Brand Accent Top Line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary via-primary to-accent" />
+          <div className="hidden sm:block absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary via-primary to-accent" />
 
           {/* Card Header */}
           <div className="flex items-start justify-between p-4 sm:p-5 pb-3">
