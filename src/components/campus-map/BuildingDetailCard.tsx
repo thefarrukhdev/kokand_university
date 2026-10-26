@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import {
   X,
   Users,
@@ -25,9 +25,25 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
   building,
   language,
   onClose,
+  onFocus,
   onSelectPrev,
   onSelectNext,
+  currentIndex,
+  totalBuildings,
 }) => {
+  const dragControls = useDragControls();
+  const [isMobileScreen, setIsMobileScreen] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobileScreen(window.innerWidth < 640);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -65,28 +81,49 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 25, scale: 0.98 }}
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          drag="y"
+          drag={isMobileScreen ? "y" : false}
+          dragControls={dragControls}
+          dragListener={false}
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={{ top: 0, bottom: 0.35 }}
           onDragEnd={(_e, dragInfo) => {
-            if (dragInfo.offset.y > 60 || dragInfo.velocity.y > 220) {
+            if (isMobileScreen && (dragInfo.offset.y > 60 || dragInfo.velocity.y > 220)) {
               onClose();
             }
           }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          role="dialog"
+          aria-modal="false"
+          aria-label={info.title}
           className="pointer-events-auto absolute z-40
-            bottom-0 left-0 right-0 rounded-t-3xl border-t border-x border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-4 sm:p-5 pb-[max(env(safe-area-inset-bottom),1rem)]
-            sm:bottom-auto sm:left-auto sm:right-6 sm:top-20 sm:w-[380px] sm:rounded-2xl sm:border sm:border-border/80 max-h-[65dvh] sm:max-h-[calc(100vh-120px)] flex flex-col overflow-hidden text-card-foreground select-none"
+            bottom-0 left-0 right-0 rounded-t-3xl border-t border-x border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-4 sm:p-5
+            pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]
+            sm:bottom-auto sm:left-auto sm:right-6 sm:top-20 sm:w-[380px] sm:rounded-2xl sm:border sm:border-border/80 max-h-[62dvh] sm:max-h-[calc(100vh-120px)] flex flex-col overflow-hidden text-card-foreground select-none"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Mobile Pull-to-dismiss Handle */}
-          <div className="w-full flex items-center justify-center -mt-1 mb-2.5 sm:hidden shrink-0">
-            <div className="w-9 h-1 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50 transition-colors" />
+          {/* Mobile Pull-to-dismiss Handle (Drag Initiator) */}
+          <div
+            onPointerDown={(e) => {
+              if (isMobileScreen) {
+                dragControls.start(e);
+              }
+            }}
+            className="w-full flex items-center justify-center -mt-1 mb-1 sm:hidden shrink-0 py-2.5 cursor-grab active:cursor-grabbing touch-none select-none"
+            role="presentation"
+          >
+            <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50 transition-colors" />
           </div>
 
           {/* Top Bar: Clean Brand Category Badge & Close Button */}
-          <div className="flex items-center justify-between gap-2 pb-2.5 shrink-0 border-b border-border/40">
+          <div
+            onPointerDown={(e) => {
+              if (isMobileScreen && e.target === e.currentTarget) {
+                dragControls.start(e);
+              }
+            }}
+            className="flex items-center justify-between gap-2 pb-2.5 shrink-0 border-b border-border/40 touch-none"
+          >
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
               {CategoryIcon && <CategoryIcon className="w-3.5 h-3.5 shrink-0" />}
               <span className="truncate max-w-[200px] sm:max-w-none">
@@ -97,7 +134,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
             <button
               onClick={onClose}
               type="button"
-              className="w-8 h-8 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-9 sm:h-9 sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
               title={MAP_I18N.close[language]}
               aria-label={MAP_I18N.close[language]}
             >
@@ -105,13 +142,13 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
             </button>
           </div>
 
-          {/* Building Information */}
+          {/* Building Information - Smooth Independent Scroll Container */}
           <motion.div
             key={building.id}
             initial={{ opacity: 0, x: 4 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex flex-col flex-1 min-h-0 pt-3 space-y-3 overflow-y-auto custom-scrollbar"
+            className="flex flex-col flex-1 min-h-0 pt-3 space-y-3 overflow-y-auto overscroll-contain custom-scrollbar touch-pan-y"
           >
             {/* Title & Capacity */}
             <div className="space-y-1">
@@ -154,29 +191,43 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
             )}
           </motion.div>
 
-          {/* Bottom Navigation: Prev / Next building cycling */}
+          {/* Bottom Navigation: Prev / Next building cycling & position indicator */}
           {(onSelectPrev || onSelectNext) && (
             <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-border/50 text-xs shrink-0">
               <button
                 onClick={onSelectPrev}
                 type="button"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium"
+                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none"
                 title={MAP_I18N.prevBuilding[language]}
                 aria-label={MAP_I18N.prevBuilding[language]}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 shrink-0" />
                 <span>{MAP_I18N.prevBuilding[language]}</span>
               </button>
+
+              {currentIndex && totalBuildings ? (
+                <button
+                  onClick={onFocus}
+                  type="button"
+                  className="flex items-center gap-1 px-2.5 py-1 min-h-[44px] sm:min-h-[32px] rounded-lg text-xs font-mono font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  title={MAP_I18N.focusBuilding[language]}
+                  aria-label={MAP_I18N.focusBuilding[language]}
+                >
+                  <span>{currentIndex}</span>
+                  <span className="opacity-40">/</span>
+                  <span>{totalBuildings}</span>
+                </button>
+              ) : null}
 
               <button
                 onClick={onSelectNext}
                 type="button"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium"
+                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none"
                 title={MAP_I18N.nextBuilding[language]}
                 aria-label={MAP_I18N.nextBuilding[language]}
               >
                 <span>{MAP_I18N.nextBuilding[language]}</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
           )}

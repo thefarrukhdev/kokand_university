@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -68,6 +68,44 @@ const getResponsiveFOV = (aspect: number): number => {
   return 45;
 };
 
+/**
+ * Adaptive Pixel Ratio:
+ * Mobile (< 768px): clamped to min(DPR, 1.5) to eliminate up to 44% unnecessary fragment fillrate on 3x screens,
+ * preventing mobile GPU thermal throttling and ensuring a rock-solid 60fps.
+ * Desktop (>= 768px): clamped to min(DPR, 2.0) for crystal-clear fidelity on Retina and high-res screens.
+ */
+const getTargetPixelRatio = (containerWidth?: number): number => {
+  if (typeof window === "undefined") return 1;
+  const w = containerWidth ?? window.innerWidth;
+  const isMobile = w < 768;
+  const maxDpr = isMobile ? 1.5 : 2.0;
+  return Math.min(window.devicePixelRatio || 1, maxDpr);
+};
+
+/**
+ * Sets emissive highlight color and intensity across an array of building meshes
+ */
+const setMeshHighlight = (meshes: THREE.Mesh[], intensity: number) => {
+  meshes.forEach((mesh) => {
+    const mat = mesh.material;
+    if (Array.isArray(mat)) {
+      mat.forEach((m) => {
+        if ("emissive" in m && m.emissive instanceof THREE.Color) {
+          m.emissive.setHex(intensity > 0 ? 0x9c1447 : 0x000000);
+          if ("emissiveIntensity" in m) {
+            (m as THREE.MeshStandardMaterial).emissiveIntensity = intensity;
+          }
+        }
+      });
+    } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
+      mat.emissive.setHex(intensity > 0 ? 0x9c1447 : 0x000000);
+      if ("emissiveIntensity" in mat) {
+        (mat as THREE.MeshStandardMaterial).emissiveIntensity = intensity;
+      }
+    }
+  });
+};
+
 export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   onBuildingSelect,
   selectedBuildingKey,
@@ -84,6 +122,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const hemiLightRef = useRef<THREE.HemisphereLight | null>(null);
+  const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
   const skyCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const skyTextureRef = useRef<THREE.CanvasTexture | null>(null);
 
@@ -111,6 +150,10 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     )
   );
 
+  // Selection and focus tracking to decouple camera flight from theme toggles
+  const prevSelectedKeyTrackingRef = useRef<BuildingKey | null>(null);
+  const prevFocusSignalRef = useRef<number>(focusSignal);
+
   // Synchronized callback refs
   const selectedBuildingKeyRef = useRef(selectedBuildingKey);
   selectedBuildingKeyRef.current = selectedBuildingKey;
@@ -124,78 +167,67 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const themeRef = useRef(theme);
   themeRef.current = theme;
 
-  // Handle building selection camera flight & mesh highlight
-  useEffect(() => {
-    // 1. Update Mesh Highlights
+  const updateBuildingHighlight = useCallback((key: BuildingKey | null, isDark: boolean) => {
     // Revert previously highlighted building meshes
-    highlightedMeshesRef.current.forEach((mesh) => {
-      const mat = mesh.material;
-      if (Array.isArray(mat)) {
-        mat.forEach((m) => {
-          if ("emissive" in m && m.emissive instanceof THREE.Color) {
-            m.emissive.setHex(0x000000);
-            if ("emissiveIntensity" in m) {
-              (m as THREE.MeshStandardMaterial).emissiveIntensity = 0;
-            }
-          }
-        });
-      } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
-        mat.emissive.setHex(0x000000);
-        if ("emissiveIntensity" in mat) {
-          (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0;
-        }
-      }
-    });
-    highlightedMeshesRef.current = [];
+    if (highlightedMeshesRef.current.length > 0) {
+      setMeshHighlight(highlightedMeshesRef.current, 0);
+      highlightedMeshesRef.current = [];
+    }
 
-    // Highlight newly selected building meshes in Kokand University Burgundy
-    if (selectedBuildingKey) {
-      const activeMeshes = buildingMeshesRef.current.get(selectedBuildingKey) || [];
-      activeMeshes.forEach((mesh) => {
-        const mat = mesh.material;
-        if (Array.isArray(mat)) {
-          mat.forEach((m) => {
-            if ("emissive" in m && m.emissive instanceof THREE.Color) {
-              m.emissive.setHex(0x9c1447);
-              if ("emissiveIntensity" in m) {
-                (m as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
-              }
-            }
-          });
-        } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
-          mat.emissive.setHex(0x9c1447);
-          if ("emissiveIntensity" in mat) {
-            (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
-          }
-        }
-      });
+    // Highlight newly selected building meshes in subtle Kokand University Burgundy accent
+    // (0.10 in light mode, 0.15 in dark mode preserving authentic architectural textures & details)
+    if (key) {
+      const activeMeshes = buildingMeshesRef.current.get(key) || [];
+      const highlightIntensity = isDark ? 0.15 : 0.10;
+      setMeshHighlight(activeMeshes, highlightIntensity);
       highlightedMeshesRef.current = activeMeshes;
     }
+  }, []);
 
-    // 2. Camera Flight
-    if (!selectedBuildingKey || !cameraRef.current || !controlsRef.current) return;
+  const flyCameraToBuilding = useCallback((key: BuildingKey) => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    const buildingPos = buildingPositionsRef.current.get(key);
+    const buildingInfo = BUILDINGS_DATA[key];
+    if (!buildingPos || !buildingInfo) return;
 
-    const buildingPos = buildingPositionsRef.current.get(selectedBuildingKey);
-    const buildingInfo = BUILDINGS_DATA[selectedBuildingKey];
+    const isMobile = (containerRef.current?.clientWidth || window.innerWidth) < 640;
+    targetLookAtRef.current.set(
+      buildingPos.x,
+      buildingPos.y - (isMobile ? 1.2 : 0),
+      buildingPos.z
+    );
 
-    if (buildingPos && buildingInfo) {
-      const isMobile = window.innerWidth < 640;
-      targetLookAtRef.current.set(
-        buildingPos.x,
-        buildingPos.y - (isMobile ? 1.2 : 0),
-        buildingPos.z
-      );
+    const offset = buildingInfo.cameraOffset || { x: 15, y: 13, z: 15 };
+    const distMult = isMobile ? 1.15 : 1.0;
+    targetCameraPosRef.current.set(
+      buildingPos.x + offset.x * distMult,
+      buildingPos.y + offset.y * distMult,
+      buildingPos.z + offset.z * distMult
+    );
+    isAnimatingRef.current = true;
+  }, []);
 
-      const offset = buildingInfo.cameraOffset || { x: 15, y: 13, z: 15 };
-      const distMult = isMobile ? 1.15 : 1.0;
-      targetCameraPosRef.current.set(
-        buildingPos.x + offset.x * distMult,
-        buildingPos.y + offset.y * distMult,
-        buildingPos.z + offset.z * distMult
-      );
-      isAnimatingRef.current = true;
+  const flyCameraToBuildingRef = useRef(flyCameraToBuilding);
+  flyCameraToBuildingRef.current = flyCameraToBuilding;
+
+  const updateBuildingHighlightRef = useRef(updateBuildingHighlight);
+  updateBuildingHighlightRef.current = updateBuildingHighlight;
+
+  // Handle building selection camera flight & mesh highlight
+  useEffect(() => {
+    const isDark = theme === "dark";
+    updateBuildingHighlight(selectedBuildingKey, isDark);
+
+    const keyChanged = selectedBuildingKey !== prevSelectedKeyTrackingRef.current;
+    const focusChanged = focusSignal !== prevFocusSignalRef.current;
+    prevSelectedKeyTrackingRef.current = selectedBuildingKey;
+    prevFocusSignalRef.current = focusSignal;
+
+    // Camera Flight (only trigger when selection key changes or explicit focus is triggered)
+    if ((keyChanged || focusChanged) && selectedBuildingKey) {
+      flyCameraToBuilding(selectedBuildingKey);
     }
-  }, [selectedBuildingKey, focusSignal]);
+  }, [selectedBuildingKey, focusSignal, theme, updateBuildingHighlight, flyCameraToBuilding]);
 
   // Handle Camera Reset signal
   useEffect(() => {
@@ -246,6 +278,10 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
+    const buildingMeshes = buildingMeshesRef.current;
+    const buildingPositions = buildingPositionsRef.current;
+    const buildingBounds = buildingBoundsRef.current;
+
     // 1. Scene & Atmosphere
     const scene = new THREE.Scene();
     sceneRef.current = scene;
@@ -274,7 +310,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       alpha: false,
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(getTargetPixelRatio(width));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 2.4;
     renderer.shadowMap.enabled = true;
@@ -301,7 +337,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const skyDome = new THREE.Mesh(skyGeo, skyMat);
     scene.add(skyDome);
 
-    // 5. Orbit Controls with Physics Damping
+    // 5. Orbit Controls with Physics Damping & Ground-aligned Touch Gestures
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -309,6 +345,11 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     controls.minPolarAngle = 0.1;
     controls.minDistance = CAMERA_PRESETS.boundaries.minDistance;
     controls.maxDistance = CAMERA_PRESETS.boundaries.maxDistance;
+    controls.screenSpacePanning = false; // Panning follows the campus ground plane naturally
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN,
+    };
     controlsRef.current = controls;
 
     // Autopilot flight cancellation on user manual interaction
@@ -320,7 +361,10 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     renderer.domElement.addEventListener("pointerdown", stopAutopilot);
     renderer.domElement.addEventListener("wheel", stopAutopilot, { passive: true });
 
-    // 6. Lighting Setup
+    // 6. Lighting Setup with Mobile-Adaptive Shadow Resolution
+    const isMobileDevice = (container.clientWidth || window.innerWidth) < 768;
+    const shadowMapSize = isMobileDevice ? 1024 : 2048;
+
     const ambientLight = new THREE.AmbientLight(0x4a5a80, 0.5);
     scene.add(ambientLight);
 
@@ -336,50 +380,53 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
     sunLight.position.set(-60, 50, -110);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.mapSize.width = shadowMapSize;
+    sunLight.shadow.mapSize.height = shadowMapSize;
     sunLight.shadow.camera.near = 0.5;
     sunLight.shadow.camera.far = 200;
     sunLight.shadow.camera.left = -60;
     sunLight.shadow.camera.right = 60;
     sunLight.shadow.camera.top = 60;
     sunLight.shadow.camera.bottom = -60;
-    sunLight.shadow.radius = 2.5;
+    sunLight.shadow.radius = isMobileDevice ? 1.5 : 2.5;
     sunLight.shadow.bias = -0.0005;
     sunLight.shadow.normalBias = 0.04;
     scene.add(sunLight);
+    sunLightRef.current = sunLight;
 
     // 7. Interactive 3D Beacon Indicator (Floating above selected building roof)
+    // Refined sleek proportions: 0.38 radius, 0.80 height, matching Kokand Burgundy palette
     const beaconGroup = new THREE.Group();
     beaconGroup.visible = false;
     scene.add(beaconGroup);
     beaconGroupRef.current = beaconGroup;
 
     // Sleek inverted cone marker pointing down at roof
-    const coneGeo = new THREE.ConeGeometry(0.7, 1.3, 16);
-    coneGeo.rotateX(Math.PI); // Inverted: points down
+    const coneGeo = new THREE.ConeGeometry(0.38, 0.8, 32);
+    coneGeo.rotateX(Math.PI); // Inverted: points down to roof center
+    coneGeo.translate(0, 0.4, 0); // Pin tip at origin for natural hover & scale
     const coneMat = new THREE.MeshStandardMaterial({
       color: 0x9c1447, // Kokand University Burgundy
       emissive: 0x9c1447,
-      emissiveIntensity: 0.6,
-      roughness: 0.3,
+      emissiveIntensity: 0.35,
+      roughness: 0.25,
       metalness: 0.2,
     });
     const beaconCone = new THREE.Mesh(coneGeo, coneMat);
     beaconCone.raycast = () => {};
     beaconGroup.add(beaconCone);
 
-    // Subtle orbiting halo ring
-    const ringGeo = new THREE.RingGeometry(0.85, 1.15, 32);
+    // Subtle orbiting halo ring matching Kokand Burgundy palette
+    const ringGeo = new THREE.RingGeometry(0.5, 0.72, 32);
     ringGeo.rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x003399, // Kokand University Navy
+      color: 0x9c1447, // Kokand University Burgundy
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.45,
     });
     const beaconHalo = new THREE.Mesh(ringGeo, ringMat);
-    beaconHalo.position.y = 0.4;
+    beaconHalo.position.y = 0.45;
     beaconHalo.raycast = () => {};
     beaconGroup.add(beaconHalo);
 
@@ -453,18 +500,11 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
         scene.add(model);
         onLoadingProgressRef.current(100);
 
-        // If a building was already selected upon load completion, immediately target it
+        // If a building was already selected upon load completion, immediately target and highlight it
         const currentActiveKey = selectedBuildingKeyRef.current;
         if (currentActiveKey && buildingPositionsRef.current.has(currentActiveKey)) {
-          const pos = buildingPositionsRef.current.get(currentActiveKey)!;
-          const info = BUILDINGS_DATA[currentActiveKey];
-          if (info) {
-            const isMobile = window.innerWidth < 640;
-            targetLookAtRef.current.set(pos.x, pos.y - (isMobile ? 1.0 : 0), pos.z);
-            const offset = info.cameraOffset || { x: 15, y: 13, z: 15 };
-            targetCameraPosRef.current.set(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
-            isAnimatingRef.current = true;
-          }
+          flyCameraToBuildingRef.current(currentActiveKey);
+          updateBuildingHighlightRef.current(currentActiveKey, themeRef.current === "dark");
         }
       },
       (xhr) => {
@@ -486,10 +526,27 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     const mouse = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
     let pointerDownTime = 0;
+    let isPointerDown = false;
+    let activePointerId: number | null = null;
 
     const onPointerDown = (e: PointerEvent) => {
+      // Multi-touch guard: if a second finger touches down (pinch/pan gesture), cancel tap selection
+      if (activePointerId !== null && activePointerId !== e.pointerId) {
+        isPointerDown = false;
+        activePointerId = null;
+        return;
+      }
+      activePointerId = e.pointerId;
       pointerDownPos = { x: e.clientX, y: e.clientY };
-      pointerDownTime = Date.now();
+      pointerDownTime = performance.now();
+      isPointerDown = true;
+    };
+
+    const onPointerCancel = (e: PointerEvent) => {
+      if (e.pointerId === activePointerId) {
+        isPointerDown = false;
+        activePointerId = null;
+      }
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -515,9 +572,13 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (!isPointerDown || e.pointerId !== activePointerId) return;
+      isPointerDown = false;
+      activePointerId = null;
+
       const deltaX = Math.abs(e.clientX - pointerDownPos.x);
       const deltaY = Math.abs(e.clientY - pointerDownPos.y);
-      const duration = Date.now() - pointerDownTime;
+      const duration = performance.now() - pointerDownTime;
 
       // Allow natural finger contact patch jitter on touchscreens
       const maxDelta = e.pointerType === "touch" ? 18 : 6;
@@ -551,6 +612,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
     renderer.domElement.addEventListener("pointermove", onPointerMove);
     renderer.domElement.addEventListener("pointerup", onPointerUp);
+    renderer.domElement.addEventListener("pointercancel", onPointerCancel);
 
     // 10. Viewport Resize Handler (Supporting Window & Mobile VisualViewport)
     const onResize = () => {
@@ -561,8 +623,24 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       camera.aspect = asp;
       camera.fov = getResponsiveFOV(asp);
       camera.updateProjectionMatrix();
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(getTargetPixelRatio(w));
       renderer.setSize(w, h);
+
+      // Adaptive shadow map resolution on viewport change
+      if (sunLightRef.current) {
+        const isMob = w < 768;
+        const targetShadowSize = isMob ? 1024 : 2048;
+        if (sunLightRef.current.shadow.mapSize.width !== targetShadowSize) {
+          sunLightRef.current.shadow.mapSize.width = targetShadowSize;
+          sunLightRef.current.shadow.mapSize.height = targetShadowSize;
+          sunLightRef.current.shadow.radius = isMob ? 1.5 : 2.5;
+          if (sunLightRef.current.shadow.map) {
+            sunLightRef.current.shadow.map.dispose();
+            sunLightRef.current.shadow.map = null;
+          }
+          sunLightRef.current.shadow.needsUpdate = true;
+        }
+      }
     };
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
@@ -632,13 +710,15 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
         const bBounds = buildingBoundsRef.current.get(activeKey)!;
 
         // Elegant floating hover above roof
-        const floatY = bBounds.max.y + 1.2 + Math.sin(elapsed * 3) * 0.2;
+        const floatY = bBounds.max.y + 0.85 + Math.sin(elapsed * 2.4) * 0.12;
         beaconGroup.position.set(bCenter.x, floatY, bCenter.z);
-        beaconGroup.rotation.y = elapsed * 1.5;
+        beaconGroup.rotation.y = elapsed * 1.2;
         beaconGroup.visible = true;
 
-        const pulse = 1 + Math.sin(elapsed * 4) * 0.05;
+        const pulse = 1 + Math.sin(elapsed * 3.2) * 0.04;
         beaconCone.scale.set(pulse, pulse, pulse);
+        const haloScale = 1 + Math.sin(elapsed * 3.2 + Math.PI / 2) * 0.08;
+        beaconHalo.scale.set(haloScale, haloScale, haloScale);
       } else {
         beaconGroup.visible = false;
       }
@@ -648,7 +728,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
 
     animate();
 
-    // 12. Teardown & Resource Disposal
+    // 12. Teardown & Deep GPU Resource Disposal
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
@@ -656,23 +736,40 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       renderer.domElement.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("pointerup", onPointerUp);
+      renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
       renderer.domElement.removeEventListener("pointerdown", stopAutopilot);
       renderer.domElement.removeEventListener("wheel", stopAutopilot);
 
       controls.dispose();
-      renderer.dispose();
+
+      const disposeMaterial = (mat: THREE.Material) => {
+        const std = mat as THREE.MeshStandardMaterial;
+        std.map?.dispose();
+        std.normalMap?.dispose();
+        std.roughnessMap?.dispose();
+        std.metalnessMap?.dispose();
+        std.emissiveMap?.dispose();
+        std.aoMap?.dispose();
+        std.alphaMap?.dispose();
+        mat.dispose();
+      };
 
       scene.traverse((obj) => {
         if ((obj as THREE.Mesh).isMesh) {
           const mesh = obj as THREE.Mesh;
           mesh.geometry?.dispose();
           if (Array.isArray(mesh.material)) {
-            mesh.material.forEach((m) => m.dispose());
+            mesh.material.forEach(disposeMaterial);
           } else if (mesh.material) {
-            mesh.material.dispose();
+            disposeMaterial(mesh.material);
           }
         }
       });
+
+      if (sunLightRef.current?.shadow.map) {
+        sunLightRef.current.shadow.map.dispose();
+        sunLightRef.current.shadow.map = null;
+      }
 
       skyTexture.dispose();
       skyGeo.dispose();
@@ -681,6 +778,25 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       coneMat.dispose();
       ringGeo.dispose();
       ringMat.dispose();
+
+      renderer.dispose();
+
+      // Clear Map collections to avoid retaining meshes/vectors in memory
+      buildingMeshes.clear();
+      buildingPositions.clear();
+      buildingBounds.clear();
+      highlightedMeshesRef.current = [];
+
+      // Reset core object references
+      sceneRef.current = null;
+      cameraRef.current = null;
+      controlsRef.current = null;
+      rendererRef.current = null;
+      sunLightRef.current = null;
+      hemiLightRef.current = null;
+      skyCanvasRef.current = null;
+      skyTextureRef.current = null;
+      beaconGroupRef.current = null;
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

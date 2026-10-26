@@ -31,8 +31,11 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
   }, []);
 
   const toggleFullscreen = () => {
+    if (typeof document === "undefined") return;
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
@@ -84,7 +87,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
         <button
           onClick={toggleFullscreen}
           type="button"
-          className="min-w-[40px] min-h-[40px] sm:min-w-[36px] sm:min-h-[36px] items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all hidden sm:inline-flex"
+          className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all hidden sm:inline-flex"
           title={MAP_I18N.fullscreen[language]}
           aria-label={MAP_I18N.fullscreen[language]}
         >

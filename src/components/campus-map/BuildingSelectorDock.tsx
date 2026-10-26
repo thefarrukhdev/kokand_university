@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { BUILDINGS_DATA } from "@/data/buildings";
 import { BuildingKey } from "@/types/campus-map";
 import { Language } from "@/contexts/LanguageContext";
-import { getBuildingIcon, BUILDING_SHORT_TITLES } from "./constants";
+import { getBuildingIcon, BUILDING_SHORT_TITLES, MAP_I18N } from "./constants";
 
 export interface BuildingSelectorDockProps {
   language: Language;
@@ -24,9 +24,9 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
 
   const buildingKeys = Object.keys(BUILDINGS_DATA) as BuildingKey[];
 
-  // Automatically scroll active building into view
+  // Automatically scroll active building into view when selected or when mobile dock re-appears
   useEffect(() => {
-    if (selectedBuildingKey && buttonRefs.current.has(selectedBuildingKey)) {
+    if (selectedBuildingKey && !isDetailOpenOnMobile && buttonRefs.current.has(selectedBuildingKey)) {
       const activeBtn = buttonRefs.current.get(selectedBuildingKey);
       activeBtn?.scrollIntoView({
         behavior: "smooth",
@@ -34,7 +34,7 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
         inline: "center",
       });
     }
-  }, [selectedBuildingKey]);
+  }, [selectedBuildingKey, isDetailOpenOnMobile]);
 
   // Smooth wheel horizontal scrolling on desktop
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -45,14 +45,18 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
 
   return (
     <footer
-      className={`pointer-events-auto w-full max-w-4xl mx-auto px-2 sm:px-0 pb-[max(env(safe-area-inset-bottom),0.5rem)] transition-all duration-300 ${
-        isDetailOpenOnMobile ? "hidden sm:block" : "block"
-      }`}
+      className={`pointer-events-auto w-full max-w-4xl mx-auto px-2 sm:px-0
+        pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pl-[calc(0.5rem+env(safe-area-inset-left,0px))] pr-[calc(0.5rem+env(safe-area-inset-right,0px))]
+        transition-all duration-300 ${
+          isDetailOpenOnMobile ? "hidden sm:block" : "block"
+        }`}
     >
       <div className="rounded-full border border-border/60 bg-card/85 dark:bg-card/80 text-card-foreground p-1 sm:p-1.5 shadow-xl shadow-black/10 backdrop-blur-xl">
         <div
           ref={containerRef}
           onWheel={handleWheel}
+          role="tablist"
+          aria-label={MAP_I18N.allBuildings[language]}
           className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-1 scroll-smooth touch-pan-x overscroll-x-contain [mask-image:linear-gradient(to_right,transparent,black_8px,black_calc(100%-8px),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_8px,black_calc(100%-8px),transparent)] sm:[-webkit-mask-image:linear-gradient(to_right,transparent,black_12px,black_calc(100%-12px),transparent)]"
         >
           {buildingKeys.map((key) => {
@@ -82,6 +86,9 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
                 }}
                 onClick={handleClick}
                 type="button"
+                role="tab"
+                aria-selected={isSelected}
+                aria-label={title}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-full text-xs font-semibold transition-all duration-200 select-none active:scale-95 ${
                   isSelected
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-[1.02]"
