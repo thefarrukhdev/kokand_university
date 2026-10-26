@@ -95,7 +95,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
           onTouchEnd={handleTouchEnd}
           role="dialog"
           aria-modal="false"
-          aria-label={info.title}
+          aria-labelledby="building-detail-title"
           className="pointer-events-auto absolute z-40
             bottom-0 left-0 right-0 rounded-t-3xl border-t border-x border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-4 sm:p-5
             pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pl-[calc(1rem+env(safe-area-inset-left,0px))] pr-[calc(1rem+env(safe-area-inset-right,0px))]
@@ -134,7 +134,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
             <button
               onClick={onClose}
               type="button"
-              className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-9 sm:h-9 sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-9 sm:h-9 sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               title={MAP_I18N.close[language]}
               aria-label={MAP_I18N.close[language]}
             >
@@ -152,7 +152,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
           >
             {/* Title & Capacity */}
             <div className="space-y-1">
-              <h2 className="text-base sm:text-lg font-bold leading-snug tracking-tight text-foreground">
+              <h2 id="building-detail-title" className="text-base sm:text-lg font-bold leading-snug tracking-tight text-foreground">
                 {info.title}
               </h2>
 
@@ -197,7 +197,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
               <button
                 onClick={onSelectPrev}
                 type="button"
-                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none"
+                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 title={MAP_I18N.prevBuilding[language]}
                 aria-label={MAP_I18N.prevBuilding[language]}
               >
@@ -209,7 +209,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
                 <button
                   onClick={onFocus}
                   type="button"
-                  className="flex items-center gap-1 px-2.5 py-1 min-h-[44px] sm:min-h-[32px] rounded-lg text-xs font-mono font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1 min-h-[44px] sm:min-h-[32px] rounded-lg text-xs font-mono font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                   title={MAP_I18N.focusBuilding[language]}
                   aria-label={MAP_I18N.focusBuilding[language]}
                 >
@@ -222,7 +222,7 @@ export const BuildingDetailCard: React.FC<BuildingDetailCardProps> = ({
               <button
                 onClick={onSelectNext}
                 type="button"
-                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none"
+                className="flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all text-xs font-medium select-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 title={MAP_I18N.nextBuilding[language]}
                 aria-label={MAP_I18N.nextBuilding[language]}
               >

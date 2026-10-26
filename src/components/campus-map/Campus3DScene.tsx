@@ -82,30 +82,6 @@ const getTargetPixelRatio = (containerWidth?: number): number => {
   return Math.min(window.devicePixelRatio || 1, maxDpr);
 };
 
-/**
- * Sets emissive highlight color and intensity across an array of building meshes
- */
-const setMeshHighlight = (meshes: THREE.Mesh[], intensity: number) => {
-  meshes.forEach((mesh) => {
-    const mat = mesh.material;
-    if (Array.isArray(mat)) {
-      mat.forEach((m) => {
-        if ("emissive" in m && m.emissive instanceof THREE.Color) {
-          m.emissive.setHex(intensity > 0 ? 0x9c1447 : 0x000000);
-          if ("emissiveIntensity" in m) {
-            (m as THREE.MeshStandardMaterial).emissiveIntensity = intensity;
-          }
-        }
-      });
-    } else if (mat && "emissive" in mat && mat.emissive instanceof THREE.Color) {
-      mat.emissive.setHex(intensity > 0 ? 0x9c1447 : 0x000000);
-      if ("emissiveIntensity" in mat) {
-        (mat as THREE.MeshStandardMaterial).emissiveIntensity = intensity;
-      }
-    }
-  });
-};
-
 export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   onBuildingSelect,
   selectedBuildingKey,
@@ -130,7 +106,6 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const buildingPositionsRef = useRef<Map<BuildingKey, THREE.Vector3>>(new Map());
   const buildingBoundsRef = useRef<Map<BuildingKey, THREE.Box3>>(new Map());
   const buildingMeshesRef = useRef<Map<BuildingKey, THREE.Mesh[]>>(new Map());
-  const highlightedMeshesRef = useRef<THREE.Mesh[]>([]);
   const beaconGroupRef = useRef<THREE.Group | null>(null);
 
   // Camera animation interpolation
@@ -167,23 +142,6 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const themeRef = useRef(theme);
   themeRef.current = theme;
 
-  const updateBuildingHighlight = useCallback((key: BuildingKey | null, isDark: boolean) => {
-    // Revert previously highlighted building meshes
-    if (highlightedMeshesRef.current.length > 0) {
-      setMeshHighlight(highlightedMeshesRef.current, 0);
-      highlightedMeshesRef.current = [];
-    }
-
-    // Highlight newly selected building meshes in subtle Kokand University Burgundy accent
-    // (0.10 in light mode, 0.15 in dark mode preserving authentic architectural textures & details)
-    if (key) {
-      const activeMeshes = buildingMeshesRef.current.get(key) || [];
-      const highlightIntensity = isDark ? 0.15 : 0.10;
-      setMeshHighlight(activeMeshes, highlightIntensity);
-      highlightedMeshesRef.current = activeMeshes;
-    }
-  }, []);
-
   const flyCameraToBuilding = useCallback((key: BuildingKey) => {
     if (!cameraRef.current || !controlsRef.current) return;
     const buildingPos = buildingPositionsRef.current.get(key);
@@ -198,7 +156,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     );
 
     const offset = buildingInfo.cameraOffset || { x: 15, y: 13, z: 15 };
-    const distMult = isMobile ? 1.15 : 1.0;
+    const distMult = isMobile ? 1.25 : 1.0;
     targetCameraPosRef.current.set(
       buildingPos.x + offset.x * distMult,
       buildingPos.y + offset.y * distMult,
@@ -210,14 +168,8 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
   const flyCameraToBuildingRef = useRef(flyCameraToBuilding);
   flyCameraToBuildingRef.current = flyCameraToBuilding;
 
-  const updateBuildingHighlightRef = useRef(updateBuildingHighlight);
-  updateBuildingHighlightRef.current = updateBuildingHighlight;
-
-  // Handle building selection camera flight & mesh highlight
+  // Handle building selection camera flight (clean architecture without mesh tinting)
   useEffect(() => {
-    const isDark = theme === "dark";
-    updateBuildingHighlight(selectedBuildingKey, isDark);
-
     const keyChanged = selectedBuildingKey !== prevSelectedKeyTrackingRef.current;
     const focusChanged = focusSignal !== prevFocusSignalRef.current;
     prevSelectedKeyTrackingRef.current = selectedBuildingKey;
@@ -227,7 +179,7 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     if ((keyChanged || focusChanged) && selectedBuildingKey) {
       flyCameraToBuilding(selectedBuildingKey);
     }
-  }, [selectedBuildingKey, focusSignal, theme, updateBuildingHighlight, flyCameraToBuilding]);
+  }, [selectedBuildingKey, focusSignal, flyCameraToBuilding]);
 
   // Handle Camera Reset signal
   useEffect(() => {
@@ -271,6 +223,9 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       drawSkyGradient(skyCanvasRef.current, isDark);
       skyTextureRef.current.needsUpdate = true;
     }
+
+    // Refresh static shadow map on theme lighting change
+    rendererRef.current.shadowMap.needsUpdate = true;
   }, [theme]);
 
   // Main WebGL Scene Initialization - Runs strictly once on mount
@@ -315,6 +270,8 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     renderer.toneMappingExposure = 2.4;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
     renderer.setClearColor(initialIsDark ? 0x0b1120 : 0xd5e0f2);
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
@@ -395,40 +352,92 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
     sunLightRef.current = sunLight;
 
     // 7. Interactive 3D Beacon Indicator (Floating above selected building roof)
-    // Refined sleek proportions: 0.38 radius, 0.80 height, matching Kokand Burgundy palette
+    // Modern sleek university map pin marker in Kokand Burgundy palette (#9c1447)
     const beaconGroup = new THREE.Group();
     beaconGroup.visible = false;
     scene.add(beaconGroup);
     beaconGroupRef.current = beaconGroup;
 
-    // Sleek inverted cone marker pointing down at roof
-    const coneGeo = new THREE.ConeGeometry(0.38, 0.8, 32);
-    coneGeo.rotateX(Math.PI); // Inverted: points down to roof center
-    coneGeo.translate(0, 0.4, 0); // Pin tip at origin for natural hover & scale
-    const coneMat = new THREE.MeshStandardMaterial({
+    // Subgroup containing the floating/rotating pin marker
+    const pinSubgroup = new THREE.Group();
+    beaconGroup.add(pinSubgroup);
+
+    // Teardrop pin profile constructed via smooth spline lathe geometry
+    const pinCurve = new THREE.SplineCurve([
+      new THREE.Vector2(0.01, 0.0),   // Sharp needle tip pointing down
+      new THREE.Vector2(0.07, 0.18),  // Slender tapering stem
+      new THREE.Vector2(0.18, 0.45),  // Elegant waist transition
+      new THREE.Vector2(0.28, 0.70),  // Lower bulb expansion
+      new THREE.Vector2(0.33, 0.85),  // Teardrop bulb equator
+      new THREE.Vector2(0.29, 1.00),  // Upper dome curvature
+      new THREE.Vector2(0.16, 1.10),  // Nearing crown
+      new THREE.Vector2(0.001, 1.14), // Rounded crown apex
+    ]);
+    const pinPoints = pinCurve.getPoints(32);
+    const pinGeo = new THREE.LatheGeometry(pinPoints, 32);
+    const pinMat = new THREE.MeshStandardMaterial({
       color: 0x9c1447, // Kokand University Burgundy
       emissive: 0x9c1447,
-      emissiveIntensity: 0.35,
+      emissiveIntensity: 0.22,
       roughness: 0.25,
       metalness: 0.2,
     });
-    const beaconCone = new THREE.Mesh(coneGeo, coneMat);
-    beaconCone.raycast = () => {};
-    beaconGroup.add(beaconCone);
+    const pinMesh = new THREE.Mesh(pinGeo, pinMat);
+    pinMesh.raycast = () => {};
+    pinMesh.castShadow = false;
+    pinMesh.receiveShadow = false;
+    pinSubgroup.add(pinMesh);
 
-    // Subtle orbiting halo ring matching Kokand Burgundy palette
-    const ringGeo = new THREE.RingGeometry(0.5, 0.72, 32);
-    ringGeo.rotateX(-Math.PI / 2);
-    const ringMat = new THREE.MeshBasicMaterial({
+    // Subtle white platinum accent ring encircling the teardrop head
+    const accentRingGeo = new THREE.TorusGeometry(0.33, 0.016, 16, 32);
+    accentRingGeo.rotateX(Math.PI / 2);
+    const accentRingMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.15,
+      roughness: 0.2,
+      metalness: 0.4,
+    });
+    const accentRing = new THREE.Mesh(accentRingGeo, accentRingMat);
+    accentRing.position.y = 0.85; // Aligned with bulb equator
+    accentRing.raycast = () => {};
+    accentRing.castShadow = false;
+    accentRing.receiveShadow = false;
+    pinSubgroup.add(accentRing);
+
+    // Dynamic ground pulse ring expanding on building roof surface
+    const pulseRingGeo = new THREE.RingGeometry(0.35, 0.60, 40);
+    pulseRingGeo.rotateX(-Math.PI / 2);
+    const pulseRingMat = new THREE.MeshBasicMaterial({
       color: 0x9c1447, // Kokand University Burgundy
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.5,
+      depthWrite: false,
     });
-    const beaconHalo = new THREE.Mesh(ringGeo, ringMat);
-    beaconHalo.position.y = 0.45;
-    beaconHalo.raycast = () => {};
-    beaconGroup.add(beaconHalo);
+    const pulseRing = new THREE.Mesh(pulseRingGeo, pulseRingMat);
+    pulseRing.position.y = 0.03; // Skimming just above roof surface
+    pulseRing.raycast = () => {};
+    pulseRing.castShadow = false;
+    pulseRing.receiveShadow = false;
+    beaconGroup.add(pulseRing);
+
+    // Precise focal dot on the roof at the pin target point
+    const focalDotGeo = new THREE.CircleGeometry(0.12, 24);
+    focalDotGeo.rotateX(-Math.PI / 2);
+    const focalDotMat = new THREE.MeshBasicMaterial({
+      color: 0x9c1447,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false,
+    });
+    const focalDot = new THREE.Mesh(focalDotGeo, focalDotMat);
+    focalDot.position.y = 0.02;
+    focalDot.raycast = () => {};
+    focalDot.castShadow = false;
+    focalDot.receiveShadow = false;
+    beaconGroup.add(focalDot);
 
     // 8. GLTF Campus Model Loading & High-Fidelity Bounding Box Center Calculation
     const fixMaterial = (mat: THREE.Material) => {
@@ -467,12 +476,6 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
 
             const matchedKey = findBuildingKeyFromObject(mesh);
             if (matchedKey) {
-              // Clone materials for building meshes to prevent emissive highlights leaking to shared meshes
-              if (mesh.material) {
-                mesh.material = Array.isArray(mesh.material)
-                  ? mesh.material.map((m) => m.clone())
-                  : mesh.material.clone();
-              }
               if (!buildingMeshesRef.current.has(matchedKey)) {
                 buildingMeshesRef.current.set(matchedKey, []);
               }
@@ -498,13 +501,13 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
         });
 
         scene.add(model);
+        renderer.shadowMap.needsUpdate = true;
         onLoadingProgressRef.current(100);
 
-        // If a building was already selected upon load completion, immediately target and highlight it
+        // If a building was already selected upon load completion, immediately target it
         const currentActiveKey = selectedBuildingKeyRef.current;
         if (currentActiveKey && buildingPositionsRef.current.has(currentActiveKey)) {
           flyCameraToBuildingRef.current(currentActiveKey);
-          updateBuildingHighlightRef.current(currentActiveKey, themeRef.current === "dark");
         }
       },
       (xhr) => {
@@ -639,18 +642,21 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
             sunLightRef.current.shadow.map = null;
           }
           sunLightRef.current.shadow.needsUpdate = true;
+          renderer.shadowMap.needsUpdate = true;
         }
       }
     };
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
 
-    // 11. Delta-timed Render Loop (High precision timer replacing deprecated THREE.Clock)
+    // 11. Delta-timed Render Loop & Tab Visibility Management
     let lastTime = performance.now();
     const startTime = performance.now();
     let animId: number;
+    let isTabVisible = typeof document !== "undefined" ? !document.hidden : true;
 
     const animate = () => {
+      if (!isTabVisible) return;
       animId = requestAnimationFrame(animate);
       const currentTime = performance.now();
       const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
@@ -709,16 +715,21 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
         const bCenter = buildingPositionsRef.current.get(activeKey)!;
         const bBounds = buildingBoundsRef.current.get(activeKey)!;
 
-        // Elegant floating hover above roof
-        const floatY = bBounds.max.y + 0.85 + Math.sin(elapsed * 2.4) * 0.12;
-        beaconGroup.position.set(bCenter.x, floatY, bCenter.z);
-        beaconGroup.rotation.y = elapsed * 1.2;
+        // Position beacon anchor on top of the building roof
+        const roofY = bBounds.max.y;
+        beaconGroup.position.set(bCenter.x, roofY, bCenter.z);
         beaconGroup.visible = true;
 
-        const pulse = 1 + Math.sin(elapsed * 3.2) * 0.04;
-        beaconCone.scale.set(pulse, pulse, pulse);
-        const haloScale = 1 + Math.sin(elapsed * 3.2 + Math.PI / 2) * 0.08;
-        beaconHalo.scale.set(haloScale, haloScale, haloScale);
+        // Elegant floating animation of the pin marker
+        const floatY = 0.55 + Math.sin(elapsed * 2.4) * 0.12;
+        pinSubgroup.position.y = floatY;
+        pinSubgroup.rotation.y = elapsed * 1.2;
+
+        // Smooth continuous pulse ripple expanding on the roof
+        const pulseProgress = (elapsed * 0.9) % 1;
+        const pulseScale = 0.7 + pulseProgress * 1.5;
+        pulseRing.scale.set(pulseScale, pulseScale, pulseScale);
+        pulseRingMat.opacity = Math.max(0, 0.6 * (1 - pulseProgress));
       } else {
         beaconGroup.visible = false;
       }
@@ -726,11 +737,27 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       renderer.render(scene, camera);
     };
 
+    // Pause RAF rendering when tab is inactive to preserve CPU & mobile GPU battery
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isTabVisible = false;
+        cancelAnimationFrame(animId);
+      } else {
+        if (!isTabVisible) {
+          isTabVisible = true;
+          lastTime = performance.now();
+          animId = requestAnimationFrame(animate);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     animate();
 
     // 12. Teardown & Deep GPU Resource Disposal
     return () => {
       cancelAnimationFrame(animId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
@@ -774,10 +801,14 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       skyTexture.dispose();
       skyGeo.dispose();
       skyMat.dispose();
-      coneGeo.dispose();
-      coneMat.dispose();
-      ringGeo.dispose();
-      ringMat.dispose();
+      pinGeo.dispose();
+      pinMat.dispose();
+      accentRingGeo.dispose();
+      accentRingMat.dispose();
+      pulseRingGeo.dispose();
+      pulseRingMat.dispose();
+      focalDotGeo.dispose();
+      focalDotMat.dispose();
 
       renderer.dispose();
 
@@ -785,7 +816,6 @@ export const Campus3DScene: React.FC<Campus3DSceneProps> = ({
       buildingMeshes.clear();
       buildingPositions.clear();
       buildingBounds.clear();
-      highlightedMeshesRef.current = [];
 
       // Reset core object references
       sceneRef.current = null;

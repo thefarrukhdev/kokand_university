@@ -50,7 +50,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
       {/* Left Capsule: Back Link & University Identity (100% Clickable, Zero Dead Zones) */}
       <Link
         to="/"
-        className="pointer-events-auto flex items-center gap-2 sm:gap-2.5 rounded-full bg-card/85 dark:bg-card/80 backdrop-blur-xl border border-border/60 py-1.5 px-3 sm:py-2 sm:px-4 shadow-lg shadow-black/5 hover:border-primary/40 hover:bg-card text-foreground transition-all min-h-[44px] sm:min-h-0 active:scale-95 group"
+        className="pointer-events-auto flex items-center gap-2 sm:gap-2.5 rounded-full bg-card/85 dark:bg-card/80 backdrop-blur-xl border border-border/60 py-1.5 px-3 sm:py-2 sm:px-4 shadow-lg shadow-black/5 hover:border-primary/40 hover:bg-card text-foreground transition-all min-h-[44px] sm:min-h-0 active:scale-95 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
         title={MAP_I18N.home[language]}
         aria-label={MAP_I18N.home[language]}
       >
@@ -76,7 +76,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
         <button
           onClick={onResetCamera}
           type="button"
-          className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all"
+          className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
           title={MAP_I18N.resetCamera[language]}
           aria-label={MAP_I18N.resetCamera[language]}
         >
@@ -87,7 +87,7 @@ export const MapHeader: React.FC<MapHeaderProps> = ({
         <button
           onClick={toggleFullscreen}
           type="button"
-          className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all hidden sm:inline-flex"
+          className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] items-center justify-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 active:scale-95 transition-all hidden sm:inline-flex focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
           title={MAP_I18N.fullscreen[language]}
           aria-label={MAP_I18N.fullscreen[language]}
         >

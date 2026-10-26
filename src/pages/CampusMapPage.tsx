@@ -89,9 +89,21 @@ const CampusMapPage: React.FC = () => {
   }, [handleSelectPrev, handleSelectNext, handleResetCamera, handleFocusBuilding, handleCloseDetail]);
 
   const activeBuilding = selectedBuildingKey ? BUILDINGS_DATA[selectedBuildingKey] : null;
+  const activeBuildingTitle = activeBuilding
+    ? activeBuilding.locales[language]?.title || activeBuilding.locales.uz.title
+    : "";
 
   return (
-    <div className="relative z-20 w-full h-[100dvh] overflow-hidden bg-background font-sans select-none">
+    <main
+      role="main"
+      aria-label={language === "uz" ? "3D Kampus xaritasi" : language === "ru" ? "3D Карта кампуса" : "3D Campus Map"}
+      className="relative z-20 w-full h-[100dvh] overflow-hidden bg-background font-sans select-none"
+    >
+      {/* Screen reader live announcement for building selection */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {activeBuildingTitle}
+      </div>
+
       {/* 3D WebGL Campus Canvas */}
       <Campus3DScene
         onBuildingSelect={handleBuildingSelect}
@@ -138,7 +150,7 @@ const CampusMapPage: React.FC = () => {
           isDetailOpenOnMobile={Boolean(selectedBuildingKey)}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

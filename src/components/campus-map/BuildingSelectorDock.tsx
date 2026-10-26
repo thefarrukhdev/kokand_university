@@ -89,7 +89,7 @@ export const BuildingSelectorDock: React.FC<BuildingSelectorDockProps> = ({
                 role="tab"
                 aria-selected={isSelected}
                 aria-label={title}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-full text-xs font-semibold transition-all duration-200 select-none active:scale-95 ${
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-full text-xs font-semibold transition-all duration-200 select-none active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none focus-visible:ring-offset-1 ${
                   isSelected
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-[1.02]"
                     : "bg-muted/40 text-foreground/80 hover:bg-muted hover:text-foreground border border-border/30"
